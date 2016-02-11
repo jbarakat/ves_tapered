@@ -34,12 +34,11 @@ void bcond(int n, double *par,
   double PIH = M_PI/2.0;
 	
 	// parameters
-	double T0   = par[0]; // membrane relaxation time = mu*a^3/kappa
-	double alph = par[1]; // taper angle of tube wall
-	double v    = par[2]; // reduced volume
-	double dp   = par[3]; // pressure drop (scaled by kappa/a^3)
-	double R0   = par[4]; // tube radius at center-of-mass axial position (scaled by a)
-	double xcom = par[5]; // center-of-mass position 
+	double v    = par[0]; // reduced volume
+	double kb   = par[1]; // bending modulus (scaled by dp*a^3)
+	double alph = par[2]; // taper angle of tube wall
+	double R0   = par[3]; // tube radius at center-of-mass axial position (scaled by a)
+	double xcom = par[4]; // center-of-mass position 
 	                      //   = time integral of center-of-mass translational speed
 
 	double tana = gsl_sf_sin(alph)/gsl_sf_cos(alph);
@@ -62,7 +61,7 @@ void bcond(int n, double *par,
   A[5 *n + 10] =  1   ; // R  (0) + x(0)*tana = R0
   A[5 *n + 1 ] =  tana; 
   A[6 *n + 11] =  1   ; // X  (0) = 0
-  A[7 *n + 5 ] =  1   ; // p  (0) - p(1) = dp
+  A[7 *n + 5 ] =  1   ; // p  (0) - p(1) = 1.0
   
   // matrix of coefficients for BC at t = 1
   B[7 *n + 5 ] = -1; // p  (0) - p(1) = dp
@@ -76,6 +75,7 @@ void bcond(int n, double *par,
   // right-hand side vector
   c[2 ] = -PIH           ;
   c[5 ] =  R0            ;
+  c[6 ] =  1.0           ;
   c[9 ] =  PIH           ;
   c[11] =  4.0*M_PI      ;
   c[12] =  4.0*M_PI*v/3.0;
