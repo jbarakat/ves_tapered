@@ -8,6 +8,7 @@
 #include <cstdio>
 #include <vector>
 #include <string>
+#include <gsl/gsl_sf_trig.h>
 #include "../include/shoot.h"
 #include "../include/read.h"
 #include "../include/write.h"
@@ -25,170 +26,123 @@ int main(){
 	int    maxiter = 251;	// maximum number of iterations
 	double tol = 1e-8;		// tolerance
 	int    nrk;						// number of Runge-Kutta steps
-
-	int    v;							// reduced volume
-	int    conf;					// confinement
 	int    flag;					// error flag
 	bool   info;					// boolean for file check
+
+	int    redvol;				// reduced volume
+	int    tubrad;				// tube radius at x = 0 (COM at t = 0)
+	int    tapang;				// taper angle
+	int    benmod;        // bending modulus
+	int    compos;        // center-of-mass axial position
 
 	// output directory
 	string opath = "../output";
 
-	// abscissa and solution vectors
-	vector<double> t(m), si(n*m), sm(n*m), sf(n*m);
+	// abscissa, source, and solution vectors
+	vector<double> t(m), u(m,0.0), si(n*m), sm(n*m), sf(n*m);
+
+	// timestep
+	double ts, dts;
 	
 	// parameters
-	double Ca, area, vlme;
-	double dC0, dC1, slope;
-	vector<double> vecCa;
-	vector<int   > vecVr;
-	vector<int   > vecCf;
-
-	// get vector of capillary numbers
-	bool flipCa = true;
-	getCa(flipCa, vecCa);
-
-	// get vector of reduced volumes
-	bool flipVr = false;
-	getVr(flipVr, vecVr);
-
-	// get vector of confinement parameters
-	bool flipCf = false;
-	getCf(flipCf, vecCf);
+	double par[5];
+	for (i = 0; i < 5; i++)
+		par[i] = 0.0;
 	
-	// loop over reduced volume
-	for (l = 0; l < vecVr.size(); l++){
-		v = vecVr[l];
+	double v    = par[0]; // reduced volume
+	double kb   = par[1]; // bending modulus (scaled by dp*a^3)
+	double alph = par[2]; // taper angle of tube wall
+	double R0   = par[3]; // tube radius at center-of-mass axial position (scaled by a)
+	double xcom = par[4]; // center-of-mass position 
+	                      //   = time integral of center-of-mass translational speed
+	
+	vector<int> vecV ;
+	vector<int> vecKb;
+	vector<int> vecAl;
+	vector<int> vecR0;
+	
+	// should have auxiliary functions to get the parameters, but for now just use the following
+	// trial parameters:
+	v    = 0.90;
+	kb   = 1e-5;
+	alph = 0.0 ;
+	R0   = 1.2 ;
+	xcom = 0.0 ;
 
-		// loop over confinement parameter
-		for (k = 0; k < vecCf.size(); k++){
-			conf = vecCf[k];
+	par[0] = v   ;
+	par[1] = kb  ;
+	par[2] = alph;
+	par[3] = R0  ;
+	par[4] = xcom;
+
+	// increments for first-order continuation
+	double dp0, dp1, slope;
 			
-			// initialize
-			nrk = 60;
-			cout << "Initializing... " << endl;
-			init(n, m, v, conf, vecCa[0], area, vlme, t.data(), si.data());
-			for (j = 0; j < m*n; j++){
-				sm[j] = si[j];
-			}
-			cout << "Initialization complete." << endl;
-			
-			// loop over capillary numbers
-			for (i = 0; i < vecCa.size(); i++){
-				if (Ca > 70)
-					nrk = 100;
-
-				// choose capillary number
-				Ca = vecCa[i];
-
-				// check if file exists
-				fileCheck(v, conf, vecCa[i], info);
-				if (info){ // file exists
-					// update solution
-					readOutput(n, m, v, conf, vecCa[i], t.data(), si.data());
-					for (j = 0; j < m*n; j++){
-						sm[j] = si[j];
-					}
-			
-			//		// skip to next step
-			//		cout << "Output file already exists. Skipping..." << endl;
-			//		continue;
-				}
-				else { // check neighboring solutions
-			//		// or just skip to next step
-			//		cout << "Output file does not exist. Skipping..." << endl;
-			//		continue;
-
-					bool info1, info2, info3, info4, info5, info6;
-					if (i == 0)
-						fileCheck(v, conf, vecCa[i], info1);
-					else
-						fileCheck(v, conf, vecCa[i-1], info1);
-					if (i == vecCa.size()-1)
-						fileCheck(v, conf, vecCa[i], info2);
-					else
-						fileCheck(v, conf, vecCa[i+1], info2);
-					fileCheck(v, conf-1, vecCa[i], info3);
-					fileCheck(v, conf+1, vecCa[i], info4);
-					fileCheck(v-1, conf, vecCa[i], info5);
-					fileCheck(v+1, conf, vecCa[i], info6);
-
-					if (info1){
-						if (i == 0)
-							readOutput(n, m, v, conf, vecCa[i], t.data(), si.data());
-						else
-							readOutput(n, m, v, conf, vecCa[i-1], t.data(), si.data());
-						for (j = 0; j < m*n; j++){
-							sm[j] = si[j];
-						}
-					}
-					else if (info2){
-						if (i == vecCa.size()-1)
-							readOutput(n, m, v, conf, vecCa[i], t.data(), si.data());
-						else
-							readOutput(n, m, v, conf, vecCa[i+1], t.data(), si.data());
-						for (j = 0; j < m*n; j++){
-							sm[j] = si[j];
-						}
-					}
-					else if (info3){
-						readOutput(n, m, v, conf-1, vecCa[i], t.data(), si.data());
-						for (j = 0; j < m*n; j++){
-							sm[j] = si[j];
-						}
-					}
-					else if (info4){
-						readOutput(n, m, v, conf+1, vecCa[i], t.data(), si.data());
-						for (j = 0; j < m*n; j++){
-							sm[j] = si[j];
-						}
-					}
-					else if (info5){
-						readOutput(n, m, v-1, conf, vecCa[i], t.data(), si.data());
-						for (j = 0; j < m*n; j++){
-							sm[j] = si[j];
-						}
-					}
-					else if (info6){
-						readOutput(n, m, v+1, conf, vecCa[i], t.data(), si.data());
-						for (j = 0; j < m*n; j++){
-							sm[j] = si[j];
-						}
-					}
-				}
-
-				// multiple shooting method
-				cout << "Shooting for v = " << double(v)/100.0 << ", conf = " 
-				     << double(conf)/100.0 << ", Ca = " << Ca << "." << endl;
-				mshoot(n, m, nrk, maxiter, tol, Ca, area, vlme, t.data(), si.data(), sf.data(), flag);
-			
-				// write to file
-				if (flag == 0)
-					writeSoln(n, m, v, conf, Ca, t.data(), sf.data(), opath);
-			
-				/* update next initial guess using
-				 * first-order continuation */
-				if (flag == 0){
-					if (i != vecCa.size() - 1){
-						if (i == 0) {
-							dC0 = vecCa[i  ] - 0;
-							dC1 = vecCa[i+1] - 0;
-						}
-						else {
-							dC0 = vecCa[i  ] - vecCa[i-1];
-							dC1 = vecCa[i+1] - vecCa[i-1];
-						}
-						slope = dC1/dC0;
-						for (j = 0; j < m*n; j++){
-							//si[j] = sm[j] + slope*(sf[j] - sm[j]);
-							si[j] = sm[j];
-							sm[j] = sf[j];
-						}
-					}
-				}
-			}
-		}
+	// initialize
+	nrk = 60;
+	cout << "Initializing... " << endl;
+	init(n, m, par, t.data(), si.data());
+	for (j = 0; j < m*n; j++){
+		sm[j] = si[j];
 	}
+	cout << "Initialization complete." << endl;
+
+//	// check if file exists
+//	fileCheck(v, conf, vecCa[i], info);
+//	if (info){ // file exists
+//		// update solution
+//		readOutput(n, m, v, conf, vecCa[i], t.data(), si.data());
+//		for (j = 0; j < m*n; j++){
+//			sm[j] = si[j];
+//		}
+//	}
+
+	// multiple shooting method
+	cout << "Shooting for v = " << double(v)/100.0 << ", conf = " 
+	     << double(conf)/100.0 << ", Ca = " << Ca << "." << endl;
+	mshoot(n, m, nrk, maxiter, tol, par, u.data(), t.data(), si.data(), sf.data(), flag);
+
+
+
+	// START FROM HERE!!!!
+	// evolve in time
+	// - recalculate u
+	// - update parameters (specifically R0 and xcom)
+
+
+	// NEED TO IMPLEMENT THE TIME INTEGRATION NOW!!!
+
+
+
+
+
+
+
+	
+//	// write to file
+//	if (flag == 0)
+//		writeSoln(n, m, v, conf, Ca, t.data(), sf.data(), opath);
+//	
+//	/* update next initial guess using
+//	 * first-order continuation */
+//	if (flag == 0){
+//		if (i != vecCa.size() - 1){
+//			if (i == 0) {
+//				dp0 = vecCa[i  ] - 0;
+//				dp1 = vecCa[i+1] - 0;
+//			}
+//			else {
+//				dp0 = vecCa[i  ] - vecCa[i-1];
+//				dp1 = vecCa[i+1] - vecCa[i-1];
+//			}
+//			slope = dp1/dp0;
+//			for (j = 0; j < m*n; j++){
+//				//si[j] = sm[j] + slope*(sf[j] - sm[j]);
+//				si[j] = sm[j];
+//				sm[j] = sf[j];
+//			}
+//		}
+//	}
 
 	return(0);
 }
