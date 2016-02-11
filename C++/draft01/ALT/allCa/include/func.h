@@ -3,11 +3,12 @@
  *
  * REFERENCES
  *  Secomb et al, J Fluid Mech (1986)
+ *  Tozeren and Skalak, Int J Multiphase Flow (1979)
  *  
  * PARAMETERS
  *  ny					[input]		number of ODEs
  *  par         [input]   parameters
- *  ur					[input]		velocity of radius of curvature
+ *  ur					[input]		rate of change of r
  *  t						[input]		abscissas
  *  y						[input]		solution
  *  f						[output]	function
@@ -28,10 +29,11 @@
 using namespace std;
 
 /* PROTOTYPES */
+void func(int, double*, double, double, double*, double*);
 
 /* IMPLEMENTATIONS */
-void func(int ny, double par[6], double ur,
-          double t, double *y, double *f){
+void func(int ny   , double *par, double ur,
+          double t , double *y  , double *f){
 	if (ny != 14)
     cout << "Error: ny should equal 14." << endl;
 
@@ -51,25 +53,24 @@ void func(int ny, double par[6], double ur,
 	double xcom = par[5]; // center-of-mass position 
 	                      //   = time integral of center-of-mass translational speed
 
-
 	double tana = gsl_sf_sin(alph)/gsl_sf_cos(alph);
   
-  // define variables
-  double r   = y[0 ]; // azimuthal radius of curvature		(scaled by a)
-  double x   = y[1 ]; // axial position										(scaled by a)
-  double psi = y[2 ]; // tilt angle 
-  double cs  = y[3 ]; // meridional curvature							(scaled by 1/a)
-  double qs  = y[4 ]; // transverse shear tension         (scaled by kappa/a^2)
-  double p   = y[5 ]; // gap pressure                     (scaled by kappa/a^3)
-  double sig = y[6 ]; // mean in-plane tension            (scaled by kappa/a^2)
-  double A   = y[7 ]; // surface area                     (scaled by a^2)
-  double V   = y[8 ]; // volume                           (scaled by a^3)
-  double Q   = y[9 ]; // leakback flux per unit circumf.  (scaled by kappa/(mu*a))
-  double R   = y[10]; // tube radius                      (scaled by a)
-	double X   = y[11]; // center-of-mass axial position    (scaled by x)
-  double U   = y[12]; // center-of-mass axial speed       (scaled by kappa/(mu*a^2))
-  double S   = y[13]; // meridional arc length            (scaled by a) 
-	
+  // define variables from current timestep
+  double r    = y[0 ]; // azimuthal radius of curvature		(scaled by a)
+  double x    = y[1 ]; // axial position										(scaled by a)
+  double psi  = y[2 ]; // tilt angle 
+  double cs   = y[3 ]; // meridional curvature							(scaled by 1/a)
+  double qs   = y[4 ]; // transverse shear tension         (scaled by kappa/a^2)
+  double p    = y[5 ]; // gap pressure                     (scaled by kappa/a^3)
+  double sig  = y[6 ]; // mean in-plane tension            (scaled by kappa/a^2)
+  double A    = y[7 ]; // surface area                     (scaled by a^2)
+  double V    = y[8 ]; // volume                           (scaled by a^3)
+  double Q    = y[9 ]; // leakback flux per unit circumf.  (scaled by kappa/(mu*a))
+  double R    = y[10]; // tube radius                      (scaled by a)
+	double X    = y[11]; // center-of-mass axial position    (scaled by x)
+  double U    = y[12]; // center-of-mass axial speed       (scaled by kappa/(mu*a^2))
+  double S    = y[13]; // meridional arc length            (scaled by a) 
+ 
 	// check bounds on radius of curvature
 	if (r > 0.99999999*R)
 		r = 0.99999999*R;

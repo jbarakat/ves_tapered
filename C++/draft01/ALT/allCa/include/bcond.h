@@ -22,12 +22,12 @@
 #include <gsl/gsl_sf_trig.h>
 
 /* PROTOTYPES */
-void bcond(int, double, double, double*, double*, double*);
+void bcond(int, double*, double*, double*, double*);
 
 /* IMPLEMENTATIONS */
 /* Calculate coefficients for linear BC
  *   r = A*y(0) + B*y(1) - c = 0 */
-void bcond(int n, double par[6],
+void bcond(int n, double *par,
            double *A, double *B, double *c){
   int i; // for (i+1)st BC
   int j; // for jth element of y
