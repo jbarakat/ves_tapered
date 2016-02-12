@@ -65,10 +65,11 @@ int main(){
 	// should have auxiliary functions to get the parameters, but for now just use the following
 	// trial parameters:
 	v    = 0.99;
+	v    = 0.90;
 	kb   = 1e-5;
 	kb   = 1e2;
 	alph = 0.0 ;
-	R0   = 1.2 ;
+	R0   = 0.9116; // conf = 80 for v = 90
 	xcom = 0.0 ;
 
 	par[0] = v   ;

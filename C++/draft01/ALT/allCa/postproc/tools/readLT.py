@@ -175,6 +175,7 @@ def readFile(path) :
 # get profiles at fixed v, conf, Ca
 def readLT(homedir, redvol, confin, capnum) :	
 	import numpy as np
+	from numpy import nan
 	import glob
 	from math import pi
 	
@@ -185,26 +186,23 @@ def readLT(homedir, redvol, confin, capnum) :
 	nfiles = len(files)
 	lss = len(substring)
 
-
-	# NEED TO REVISE THIS ... WHAT TO DO WHEN THERE IS NO FILE...
-
-	Ca   =  0.0
-	eps  =  0.0
-	area =  1.0
-	vlme =  1.0
-	s    = [0.0]
-	x    = [0.0]
-	r    = [0.0]
-	nx   = [0.0]
-	nr   = [0.0]
-	tx   = [0.0]
-	tr   = [0.0]
-	cs   = [-1.0]
-	cphi = [-1.0]
-	qs   = [0.0]
-	p    = [0.0]
-	tau  = [0.0]
-	gam  = [0.0]
+	Ca   =  nan 
+	eps  =  nan 
+	area =  nan 
+	vlme =  nan 
+	s    = [nan]
+	x    = [nan]
+	r    = [nan]
+	nx   = [nan]
+	nr   = [nan]
+	tx   = [nan]
+	tr   = [nan]
+	cs   = [nan]
+	cphi = [nan]
+	qs   = [nan]
+	p    = [nan]
+	tau  = [nan]
+	gam  = [nan]
 
 	# import data
 	if nfiles > 0 :   #### NEED TO REVISE THIS .. WHAT TO DO WHEN THERE IS NO FILE...
@@ -383,3 +381,65 @@ def readLT2(homedir, redvol, confin) :
 
 
 
+# get profiles at fixed v, conf, Ca
+def readInput(homedir, redvol, confin, capnum) :
+	import numpy as np
+	from numpy import nan
+	import glob
+	from math import pi
+	
+	# load data files
+	outdir	= homedir + '*Ca' + capnum + '.dat'
+	substring = homedir + '/sln_v' + redvol + '_conf' + confin + '_Ca'
+	files	= sorted(glob.glob(outdir))
+	nfiles = len(files)
+	lss = len(substring)
+
+	Ca   =  nan 
+	eps  =  nan 
+	area =  nan 
+	vlme =  nan 
+	s    = [nan]
+	x    = [nan]
+	r    = [nan]
+	nx   = [nan]
+	nr   = [nan]
+	tx   = [nan]
+	tr   = [nan]
+	cs   = [nan]
+	cphi = [nan]
+	qs   = [nan]
+	p    = [nan]
+	tau  = [nan]
+	gam  = [nan]
+
+	# import data
+	if nfiles > 0 :   #### NEED TO REVISE THIS .. WHAT TO DO WHEN THERE IS NO FILE...
+		f = files[0]
+		#print 'Reading ' + f + ' ...'
+		(eps, area, vlme, s, x, r, nx, nr, tx, tr, cs, cphi, qs, p, tau, gam) = readFile(f)
+	
+		# get capillary number
+		lf = len(f)
+		Ca = f[lss:lf-4]
+		if (Ca[0] == '0') :
+			Ca = Ca[0] + '.' + Ca[1:]
+		Ca = float(Ca)
+	
+		# scale pressure and surface tensions
+		p   = p  /Ca
+		gam = gam/Ca
+		qs  = qs /Ca
+	
+	# return data
+	return (Ca, eps, area, vlme, s, x, r, nx, nr, tx, tr, cs, cphi, qs, p, tau, gam)
+
+def writeInput(homedir, redvol, confin, capnum) :
+	import numpy as np
+	from numpy import nan
+	import glob
+	from math import pi
+	
+	(Ca, eps, area, vlme, s, x, r, nx, nr, tx, tr, cs, cphi, qs, p, tau, gam) = readInput(homedir, redvol, confin, capnum)
+	
+	

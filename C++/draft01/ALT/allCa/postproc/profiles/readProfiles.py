@@ -49,33 +49,7 @@ def readProfiles() :
 	(Ca, eps, area, vlme, s, x, r, nx, nr, tx, tr, cs, cphi, qs, p, tau, gam) = readLT(altdir, redvol, confin, capnum)
 
 	lengthx = len(x)
-	mid = lengthx/2
-	h0  = 1.0 - r[mid]
-
-#	print mid
-#	print (1.0 - r[mid])/eps
-#	print 1.0 - ((1.0 - r[mid])/eps - 1.0)*6.0/eps
-
-#	print 6.0*pow(0.643/h0,1.5)
-#	print 6.0*pow(0.643/eps,1.5)
-#	print gam[-1]
-	a = sqrt(area/(4.0*pi))
-	v = vlme/(4.0/3.0*pi*a*a*a)
-	Linf = 2.0*(a*a - 1.0)
-#	Linf = (4.0/3.0)*(v*a*a*a - 1.0)
-#	print Linf
-	
-	dgamds = (gam[mid] - gam[mid-1])/(s[mid] - s[mid-1])
-#	print dgamds
-#	print 1.0/eps
-
-#	print (gam[0] - gam[-1] + Linf/eps)
-	print (gam[0] - gam[-1] + Linf/eps)*pow(eps,0.5)
-#	print (p[0] - p[-1] - 2*Linf/eps)*pow(eps,0.5)
-	
-	## interpolate to xi using splines
-	#tck = interpolate.splrep(x, y, s=0)
-	#yi = interpolate.splev(xi, tck, der=0)
+#	print lengthx
 		
 	# alternative way of calculating the pressure drop
 	# - integrate the shear stress on the wall
