@@ -27,7 +27,7 @@ def readFile(path) :
 	V	  = []
 	
 	# grab data
-	Q	  = data[ 9,0]
+	Q2  = data[ 9,0]
 	S	  = data[10,0]
 	s	  .append(data[0,:]*S)
 	r	  .append(data[1,:])
@@ -71,7 +71,7 @@ def readFile(path) :
 	x	 = x - 0.5*(max(x) + min(x))
 
 	# get film parameter
-	eps = Q
+	eps = Q2
 
 	# get normal and tangent
 	nx = []
@@ -166,8 +166,9 @@ def readFile(path) :
 #	plt.plot(x, cs)
 #	plt.show()
 
-	#return (s, x, r, psi, cs, qs, p, gam, A, V, Q, S)
-	return (eps, area, vlme, s, x, r, nx, nr, tx, tr, cs, cphi, qs, p, tau, gam)
+	Q = 0.5*Q2
+
+	return (eps, area, vlme, s, x, r, nx, nr, tx, tr, cs, cphi, psi, qs, p, tau, gam, A, V, Q, S)
 
 
 
@@ -199,6 +200,7 @@ def readLT(homedir, redvol, confin, capnum) :
 	tr   = [nan]
 	cs   = [nan]
 	cphi = [nan]
+	psi  = [nan]
 	qs   = [nan]
 	p    = [nan]
 	tau  = [nan]
@@ -208,7 +210,7 @@ def readLT(homedir, redvol, confin, capnum) :
 	if nfiles > 0 :   #### NEED TO REVISE THIS .. WHAT TO DO WHEN THERE IS NO FILE...
 		f = files[0]
 		#print 'Reading ' + f + ' ...'
-		(eps, area, vlme, s, x, r, nx, nr, tx, tr, cs, cphi, qs, p, tau, gam) = readFile(f)
+		(eps, area, vlme, s, x, r, nx, nr, tx, tr, cs, cphi, psi, qs, p, tau, gam, A, V, Q, S) = readFile(f)
 	
 		# get capillary number
 		lf = len(f)
@@ -223,7 +225,7 @@ def readLT(homedir, redvol, confin, capnum) :
 		qs  = qs /Ca
 	
 	# return data
-	return (Ca, eps, area, vlme, s, x, r, nx, nr, tx, tr, cs, cphi, qs, p, tau, gam)
+	return (Ca, eps, area, vlme, s, x, r, nx, nr, tx, tr, cs, cphi, psi, qs, p, tau, gam, A, V, Q, S)
 		
 
 
@@ -258,7 +260,7 @@ def readLT2(homedir, redvol, confin) :
 	CURV   = [] # rear mean curvature
 	for f in files :
 		# read file
-		(eps, area, vlme, s, x, r, nx, nr, tx, tr, cs, cphi, qs, p, tau, gam) = readFile(f)
+		(eps, area, vlme, s, x, r, nx, nr, tx, tr, cs, cphi, psi, qs, p, tau, gam, A, V, Q, S) = readFile(f)
 		
 		EPS   .append(eps)
 		AREA  .append(area)
@@ -386,10 +388,13 @@ def readInput(homedir, redvol, confin, capnum) :
 	import numpy as np
 	from numpy import nan
 	import glob
-	from math import pi
+	from scipy import integrate, interpolate
+	from math import log10, floor, pi
+	import math
+	import cmath
 	
 	# load data files
-	outdir	= homedir + '*Ca' + capnum + '.dat'
+	outdir	= homedir + '/sln_*Ca' + capnum + '.dat'
 	substring = homedir + '/sln_v' + redvol + '_conf' + confin + '_Ca'
 	files	= sorted(glob.glob(outdir))
 	nfiles = len(files)
@@ -417,7 +422,7 @@ def readInput(homedir, redvol, confin, capnum) :
 	if nfiles > 0 :   #### NEED TO REVISE THIS .. WHAT TO DO WHEN THERE IS NO FILE...
 		f = files[0]
 		#print 'Reading ' + f + ' ...'
-		(eps, area, vlme, s, x, r, nx, nr, tx, tr, cs, cphi, qs, p, tau, gam) = readFile(f)
+		(eps, area, vlme, s, x, r, nx, nr, tx, tr, cs, cphi, psi, qs, p, tau, gam, A, V, Q, S) = readFile(f)
 	
 		# get capillary number
 		lf = len(f)
@@ -430,16 +435,76 @@ def readInput(homedir, redvol, confin, capnum) :
 		p   = p  /Ca
 		gam = gam/Ca
 		qs  = qs /Ca
-	
-	# return data
-	return (Ca, eps, area, vlme, s, x, r, nx, nr, tx, tr, cs, cphi, qs, p, tau, gam)
 
-def writeInput(homedir, redvol, confin, capnum) :
-	import numpy as np
-	from numpy import nan
-	import glob
-	from math import pi
+	################################################################ now modify for tapered problem...
 	
-	(Ca, eps, area, vlme, s, x, r, nx, nr, tx, tr, cs, cphi, qs, p, tau, gam) = readInput(homedir, redvol, confin, capnum)
+	t = np.linspace(0.0,1.0,len(s));
+	for i in range(len(s)) :
+		t[i] = s[i]/s[-1]
+
+	# calculate center of mass
+	kernel = np.linspace(0.0,1.0,len(s))
+	for i in range(len(s)) :
+		kernel[i] = x[i]*r[i]*r[i]*math.cos(psi[i])
+		
+	xcom = (pi/vlme)*integrate.trapz(kernel, s)
 	
+	# center vesicle at center of mass
+	for i in range(len(x)) :
+		x[i] = x[i] - xcom
 	
+	# get the nominal radius of the vesicle
+	Rves  = math.sqrt(area / (4.0*pi))
+	Rv3   = Rves*Rves*Rves
+
+	# define the original characteristic scales
+	# (vesicle speed, tube radius, and viscosity)
+	Rtube = 1.0
+	U     = 1.0
+
+	# set the center-of-mass to be the origin
+	XCOM  = 0.0
+	
+	# get reduced volume and bending modulus
+	v     = vlme/(4.0*pi*Rv3/3.0)
+	kb    = 1.0/Ca
+	
+	# get critical tube radius
+	cf = (cmath.sqrt(3)/2.0)*1j
+	a1 = pow(-v - cmath.sqrt(v*v - 1.0),1.0/3.0)
+	a2 = pow(-v + cmath.sqrt(v*v - 1.0),1.0/3.0)
+	Rc = -0.5*(a1 + a2) + cf*(a1 - a2)
+	Rc = Rc.real
+	if abs(v - 1.0) < 1e-12 :
+		Rc = 1.0
+	
+	# get confinement
+	conf  = Rc*Rves
+
+	# rescale all variables wrt the pressure drop, 
+	# the suspending fluid viscosity (mu = 1), 
+	# and the nominal radius of the vesicle
+	dp    = p[0] - p[-1]
+	kb    = kb/(dp*Rv3)
+	Rtube = Rtube / Rves
+	U     = U /(dp*Rves)
+	Q     = Q /(dp*Rves*Rves)
+	Uflow = U - 2*Q/Rtube
+	S     = S / Rves
+	area = area/(Rves*Rves)
+	vlme = vlme/Rv3
+	for i in range(len(s)) :
+		p  [i] = p  [i] / dp
+		tau[i] = tau[i] / dp
+		gam[i] = gam[i] / (dp*Rves)
+		qs [i] = qs [i] / (dp*Rves)
+
+		r   [i] = r   [i] / Rves
+		x   [i] = x   [i] / Rves
+		s   [i] = s   [i] / Rves
+		cs  [i] = cs  [i] * Rves
+		cphi[i] = cphi[i] * Rves
+		A   [i] = A   [i] / (Rves*Rves)
+		V   [i] = V   [i] / Rv3
+
+	return (v, conf, kb, area, vlme, t, s, x, r, nx, nr, tx, tr, cs, cphi, psi, qs, p, tau, gam, A, V, Q, S, Rtube, U, XCOM)

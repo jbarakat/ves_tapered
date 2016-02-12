@@ -115,13 +115,9 @@ int main(){
 
 
 
-	// START FROM HERE!!!!
 	// evolve in time
 	// - recalculate u
 	// - update parameters (specifically R0 and xcom)
-
-
-	// NEED TO IMPLEMENT THE TIME INTEGRATION NOW!!!
 
 
 
@@ -237,12 +233,32 @@ void init(int n, int m, double *par, double *u, double *t, double *s){
 		s[i*n + 11] = XCOM[i];
 		s[i*n + 12] = 0.0   ; // center of mass speed
 		s[i*n + 13] = Stot  ;
-
-		cout << p << " " << sig << endl;
 	}
 
+	// read input file
+	int id[3];
+	id[0] = 90; // reduced volume
+	id[1] = 80; // confinement
+	id[2] = 0 ; // bending modulus
 
-	// get critical tube radius
+	readInput(n, m, id, T.data(), S.data());
+
+	for (i = 0; i < m; i++){
+		t[i] = T[i];
+		for (j = 0; j < n; j++){
+			s[i*n + j] = S[i*n + j];
+		}
+	}
+
+//	// for debugging
+//	for (i = 0; i < m; i++){
+//		printf("%.4f ", T[i]);
+//		for (j = 0; j < n; j++)	
+//			printf("%.4f ", S[i*n + j]);
+//		printf("\n");
+//	}
+
+
 
 //	// get critical confinement parameter and set nominal radius
 //	getCritCf(v, crit);
