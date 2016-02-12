@@ -70,6 +70,10 @@ void mshoot(int n, int m, int nrk, const int MAXITER, const double TOL,
 		shoot (n, m, nrk, par, u, t, y, s   );
 		newton(n, m, nrk, par, u, t, y, s, d);
 		fzero (n, m, nrk, par, u, t, y, s, f);
+
+//		for (i = 0; i < mn; i++){
+//			cout << d[i] << endl;
+//		}
 		
 		// calculate squared norm of f
 		fnorm = 0;
@@ -88,8 +92,8 @@ void mshoot(int n, int m, int nrk, const int MAXITER, const double TOL,
 				sp[j] = s[j] - p*d[j];
 			}
 
-			shoot(n, m, nrk, par, u, t, sp, yp    );
-			fzero(n, m, nrk, par, u, t, sp, yp, fp);
+			shoot(n, m, nrk, par, u, t, yp, sp    );
+			fzero(n, m, nrk, par, u, t, yp, sp, fp);
 
 			fpnorm = 0;
 			for (j = 0; j < mn; j++){
@@ -134,7 +138,7 @@ void mshoot(int n, int m, int nrk, const int MAXITER, const double TOL,
  *       y(tmh; tmh+1, smh+1), ..., y(tm-2; tm-1, sm-1)]
  */
 void shoot(int n, int m, int nrk, double *par, double *u,
-           double *t, double *s, double *y){
+           double *t, double *y, double *s){
 	if (m % 2 == 0){
 		cout << "Error: choose m to be odd." << endl;
 		return;

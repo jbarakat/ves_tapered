@@ -171,11 +171,14 @@ void func(int ny   , double *par, double ur,
 		f[11] =  M_PI*r2*x*cos/((4.0/3.0)*M_PI*v);
 		f[12] =  0.0                             ;
 		f[13] =  0.0                             ;
+		
+		//cout << f[5] << endl;
 	}
 
 	for (i = 0; i < ny; i++){
 		f[i] *= S;
 	}
+
 }
 
 

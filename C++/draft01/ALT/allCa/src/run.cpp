@@ -12,8 +12,9 @@
 #include "../include/shoot.h"
 #include "../include/read.h"
 #include "../include/write.h"
+#include "../include/spheroid.h"
 
-void init(int, int, int, int, double, double&, double&, double*, double*);
+void init(int, int, double*, double*, double*, double*);
 void getCa(bool, vector<double>&);
 void getVr(bool, vector<int>&);
 void getCf(bool, vector<int>&);
@@ -21,8 +22,8 @@ void getCritCf(int, double&);
 
 int main(){
 	int    i, j, k, l;
-	int    n    = 10;			// size of solution vector
-	int    m    = 403;		// number of shooting points
+	int    n    = 14;			// size of solution vector
+	int    m    = 103;		// number of shooting points
 	int    maxiter = 251;	// maximum number of iterations
 	double tol = 1e-8;		// tolerance
 	int    nrk;						// number of Runge-Kutta steps
@@ -63,8 +64,9 @@ int main(){
 	
 	// should have auxiliary functions to get the parameters, but for now just use the following
 	// trial parameters:
-	v    = 0.90;
+	v    = 0.99;
 	kb   = 1e-5;
+	kb   = 1e2;
 	alph = 0.0 ;
 	R0   = 1.2 ;
 	xcom = 0.0 ;
@@ -75,17 +77,30 @@ int main(){
 	par[3] = R0  ;
 	par[4] = xcom;
 
+	double tana = gsl_sf_sin(alph)/gsl_sf_cos(alph);
+
 	// increments for first-order continuation
 	double dp0, dp1, slope;
 			
 	// initialize
 	nrk = 60;
 	cout << "Initializing... " << endl;
-	init(n, m, par, t.data(), si.data());
+	init(n, m, par, u.data(), t.data(), si.data());
 	for (j = 0; j < m*n; j++){
 		sm[j] = si[j];
 	}
 	cout << "Initialization complete." << endl;
+
+	// multiple shooting method
+	cout << "Shooting for v = " << v << ", R0 = " << R0 << ", kb = " << kb << "." << endl;
+	mshoot(n, m, nrk, maxiter, tol, par, u.data(), t.data(), si.data(), sf.data(), flag);
+
+
+//	for (i = 0; i < m; i++){
+//		//cout << t[i] << endl;
+//		cout << si[i*n + 10] << endl;
+//	}
+
 
 //	// check if file exists
 //	fileCheck(v, conf, vecCa[i], info);
@@ -96,11 +111,6 @@ int main(){
 //			sm[j] = si[j];
 //		}
 //	}
-
-	// multiple shooting method
-	cout << "Shooting for v = " << double(v)/100.0 << ", conf = " 
-	     << double(conf)/100.0 << ", Ca = " << Ca << "." << endl;
-	mshoot(n, m, nrk, maxiter, tol, par, u.data(), t.data(), si.data(), sf.data(), flag);
 
 
 
@@ -149,39 +159,112 @@ int main(){
 
 
 
-void init(int n, int m, int v, int conf, double Ca,
-          double &area, double &vlme, double *t, double *s){
+void init(int n, int m, double *par, double *u, double *t, double *s){
 	// declare variables
 	int    i, j;
-	vector<double> T(m), S(m*n);
-	double crit, a;
-
-	// get critical confinement parameter and set nominal radius
-	getCritCf(v, crit);
-	a = 0.01*double(conf)*crit;
+	vector<double> T(m), U(m), S(m*n), Rtube(m);
+	double a, b; // major and minor axes
+	int    info;
 	
-	area = 4.0*M_PI*a*a;
-	vlme = (4.0/3.0)*M_PI*a*a*a*(0.01*double(v));
-	
-	// read file
-	readEquil(n, m, 90, conf, T.data(), S.data());
-	//readOutput(n, m, v, conf-1, Ca, T.data(), S.data()); // initialize using slightly smaller vesicle (useful at high Ca)
+	double v    = par[0]; // reduced volume
+	double kb   = par[1]; // bending modulus (scaled by dp*a^3)
+	double alph = par[2]; // taper angle of tube wall
+	double R0   = par[3]; // tube radius at center-of-mass axial position (scaled by a)
+	double xcom = par[4]; // center-of-mass position 
+	                      //   = time integral of center-of-mass translational speed
 
-	// copy abscissa and solution vectors
+	double tana = gsl_sf_sin(alph)/gsl_sf_cos(alph);
+
+	// get surface area and volume
+	double area = 4.0*M_PI;
+	double vlme = 4.0*M_PI*v/3.0;
+
+	// get spheroid
+	vector<double> Sarc(m), R(m), X(m), XCOM(m), CS(m), CPHI(m), THET(m), PSI(m), A(m), V(m);
+	proAxes(area, vlme, 1.01, 1.0, a, b, info);
+	if (info == 1)
+		proAxes(area, vlme, 1.5, 1.0, a, b, info);
+	proShape(m, a, b, Sarc.data(), X.data(), R.data(), XCOM.data(),
+	         CS.data(), CPHI.data(), PSI.data(), THET.data(), 
+					 A.data(), V.data());
+//	for (i = 0; i < m; i++){
+//		cout << XCOM[i] << endl;
+//	}
+	
+	double Stot = Sarc[m-1];
+
+	// get tube radius
 	for (i = 0; i < m; i++){
-		t[i] = T[i];
-		for (j = 0; j < n; j++){
-			s[i*n + j] = S[i*n + j];
-		}
+		Rtube[i] = R0 - tana*X[i];
 	}
 
-//	// scale pressure, mean in-plane tension, and transverse shear tension by Ca
+	// polynomial expressions for p and tau (from static solution)
+	double p, sig;
+	p  = - 0.39632;
+	p +=   2.89243*v;
+	p += - 8.71787*v*v;
+	p +=  13.91363*v*v*v;
+	p += -12.41387*v*v*v*v;
+	p +=   5.87473*v*v*v*v*v;
+	p +=  -1.15262*v*v*v*v*v*v;
+	p *= 1e5*kb;
+
+	sig  =   1.2935;
+	sig += - 9.3499*v;
+	sig +=  27.9266*v*v;
+	sig += -44.1844*v*v*v;
+	sig +=  39.0880*v*v*v*v;
+	sig += -18.3432*v*v*v*v*v;
+	sig +=   3.5688*v*v*v*v*v*v;
+	sig *= 1e4*kb;
+
+	for (i = 0; i < m; i++){
+		t[i       ] = Sarc[i]/Stot;
+		u[i       ] = 0.0;
+
+		s[i*n + 0 ] = R  [i];
+		s[i*n + 1 ] = X  [i];
+		s[i*n + 2 ] = PSI[i];
+		s[i*n + 3 ] = CS [i];
+		s[i*n + 4 ] = 0.0   ; // transverse shear tension
+		s[i*n + 5 ] = p     ;
+		s[i*n + 6 ] = sig   ;
+		s[i*n + 7 ] = A  [i];
+		s[i*n + 8 ] = V  [i];
+		s[i*n + 9 ] = 0.0   ; // leakback flux
+		s[i*n + 10] = Rtube[i];
+		s[i*n + 11] = XCOM[i];
+		s[i*n + 12] = 0.0   ; // center of mass speed
+		s[i*n + 13] = Stot  ;
+
+		cout << p << " " << sig << endl;
+	}
+
+
+	// get critical tube radius
+
+//	// get critical confinement parameter and set nominal radius
+//	getCritCf(v, crit);
+//	a = 0.01*double(conf)*crit;
+//	
+//	area = 4.0*M_PI*a*a;
+//	vlme = (4.0/3.0)*M_PI*a*a*a*(0.01*double(v));
+	
+//	proShape(m, a, b, 
+//						  double &S, double *t, double *x, double *r, 
+//							double *cs, double *cphi, double *psi,
+//							double *A, double *V){ // b > a
+//	// read file
+//	readEquil(n, m, 90, conf, T.data(), S.data());
+//	//readOutput(n, m, v, conf-1, Ca, T.data(), S.data()); // initialize using slightly smaller vesicle (useful at high Ca)
+//
+//	// copy abscissa and solution vectors
 //	for (i = 0; i < m; i++){
-//		for (j = 3; j < 6; j++){
-//			s[i*n + j] = S[i*n + j]/Ca;
+//		t[i] = T[i];
+//		for (j = 0; j < n; j++){
+//			s[i*n + j] = S[i*n + j];
 //		}
 //	}
-
 }
 
 

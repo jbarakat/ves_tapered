@@ -3,10 +3,6 @@
  *  and, conversely, calculate the area and volume of a spheroid of given
  *  major and minor radii.
  *
- *  NOTE (8/31/2015): This class is not complete. For this class to be truly 
- *  useful, should also write a function to calculate the curvature of the
- *  spheroid along the meridional contour.
- *
  * REFERENCES
  *  N/A
  *  
@@ -33,7 +29,9 @@ double proVlme(double, double);
 
 /* IMPLEMENTATIONS */
 
-int proAxes(double area, double vlme, double a0, double b0, double &a, double &b){
+/* Given the surface area and volume, compute the major and minor 
+ * axes of a prolate spheroid via an iterative method. */
+int proAxes(double area, double vlme, double a0, double b0, double &a, double &b, int &info){
 	int    i, j, iter;
 
 	double s[2], f[2], Df[4], Ds[2];
@@ -51,6 +49,8 @@ int proAxes(double area, double vlme, double a0, double b0, double &a, double &b
 	const double PI2 = 2.0*M_PI;
 	const int MAXITER = 1000;
 	const double TOL  = 1e-16;
+
+	info = 0;
 	
 	// initial guess
 	a    = a0;
@@ -61,22 +61,31 @@ int proAxes(double area, double vlme, double a0, double b0, double &a, double &b
 	iter  = 0;
 	fnorm = 1;
 	while (iter < MAXITER && fnorm > TOL){
-		if (a > b){
-			cout << "Error: a > b. Pick another initial guess." << endl;
+		if (fabs(a - b) < 1e-12){
+			cout << "Error: a = b. Pick another initial guess." << endl;
+			info = 1;
+			return (1);
+		}
+		if (a < b){
+			cout << "Error: a < b. Pick another initial guess." << endl;
+			info = 1;
 			return (1);
 		}
 		if (a < 0){
 			cout << "Error: a < 0. Pick another initial guess." << endl;
+			info = 1;
 			return (1);
 		}
 		if (b < 0){
 			cout << "Error: b < 0. Pick another initial guess." << endl;
+			info = 1;
 			return (1);
 		}
 
+
 		a2    = a*a;
 		b2    = b*b;
-		e2    = 1.0 - a2/b2;
+		e2    = 1.0 - b2/a2;
 		e     = sqrt(e2);
 		d2    = 1.0 - e2;
 		d     = sqrt(d2);
@@ -92,19 +101,14 @@ int proAxes(double area, double vlme, double a0, double b0, double &a, double &b
 		/* calculate Jacobian
 		 *  Df = / dA/da  dA/db \
 		 *       \ dV/da  dV/db / */
-		dAda  = -a/e2;
-		dAda +=  a2*asine/(b*e2*e);
-		dAda +=  b*asine/e;
-		dAda +=  2.0*a;
-		dAda *=  PI2;
+		dAda  =  e*d + (e2 - d2)*asine;
+		dAda *=  2.0*M_PI*b/(e*e2);
+
+		dAdb  =  e*d*(e2 - d2) + asine;
+		dAdb *=  2.0*M_PI*a/(e*e2);
 	
-		dAdb  =  a2/(b*e2);
-		dAdb +=  a*asine/e;
-		dAdb -=  a*a2*asine/(b2*e2*e);
-		dAdb *=  PI2;
-	
-		dVda  =  4.0*PI2*a*b/3.0;
-		dVdb  =  2.0*PI2*a*a/3.0;
+		dVda  =  4.0*PI2*b*b/3.0;
+		dVdb  =  8.0*PI2*a*b/3.0;
 	
 		Df[0] = dAda; Df[1] = dAdb;
 		Df[2] = dVda; Df[3] = dVdb;
@@ -145,8 +149,6 @@ int proAxes(double area, double vlme, double a0, double b0, double &a, double &b
 				break;
 		}
 
-	//	cout << Ds[0] << " " << Ds[1] << endl;
-		
 		// update next guess
 		for (i = 0; i < 2; i++){
 			s[i] += p*Ds[i];
@@ -154,43 +156,46 @@ int proAxes(double area, double vlme, double a0, double b0, double &a, double &b
 	
 		a = s[0]; b = s[1];
 
-		cout << "iter = " << iter << ", p = " << p << ", fnorm = " << fnorm << endl;
+//		cout << "iter = " << iter << ", p = " << p << ", fnorm = " << fnorm << endl;
 		iter++;
 	}
 
 	return(0);
 }
 
-double proArea(double a, double b){ // b > a
+double proArea(double a, double b){ // a > b
 	double area;
 	double a2    = a*a;
 	double b2    = b*b;
-	double e2    = 1.0 - a2/b2;
+	double e2    = 1.0 - b2/a2;
 	double e     = sqrt(e2);
 	double asine = gsl_complex_abs(gsl_complex_arcsin_real(e));
 
-	area  = 1 + b/(a*e)*asine;
-	area *= 2*M_PI*a2;
+	area  = 1 + a/(b*e)*asine;
+	area *= 2*M_PI*b2;
 
 	return(area);
 }
 
-double proVlme(double a, double b){ // b > a
+double proVlme(double a, double b){ // a > b
 	double vlme;
-	double a2 = a*a;
+	double b2 = b*b;
 
-	vlme  = a2*b;
+	vlme  = b2*a;
 	vlme *= 4.0*M_PI/3.0;
 
 	return(vlme);
 }
 
 
-// UNFINISHED FUNCTION
+/* Given the major and minor axes, compute the shape variables
+ * of a prolate spheroid. */
 void proShape(int m, double a, double b, 
-						  double &S, double *t, double *r, double *cs, double *psi){ // b > a
+							double *s, double *x, double *r, double *xcom,
+							double *cs, double *cphi, double *psi, double *thet,
+							double *A, double *V){ // b > a
 	int    i, i1;
-	double s[m], x[m], thet[m];
+	//double s[m], thet[m];
 	double a2 = a*a;
 	double b2 = b*b;
 	double x2, r2;
@@ -198,19 +203,21 @@ void proShape(int m, double a, double b,
 	double dr, dr2;
 	double ds, ds2;
 	double s0 = 0;
+	double g;
 	
 	// get axial length
-	x[0] = -b;
-	dx   = 2*b/(m-1);
-	for (i = 0; i < m; i++){
+	x[0] = -a;
+	dx   = 2*a/(m-1);
+	for (i = 0; i < m-1; i++){
 		i1 = i + 1;
 		x[i1] = x[i] + dx;
 	}
+	x[m-1] = a;
 
 	// get radius
 	for (i = 0; i < m; i++){
 		x2   = x[i]*x[i];
-		r2   = a2*(1.0 - x2/b2);
+		r2   = b2*(1.0 - x2/a2);
 		r[i] = sqrt(r2);
 	}
 
@@ -225,23 +232,53 @@ void proShape(int m, double a, double b,
 		s[i1] = s[i] + ds;
 	}
 
-	S = s[m-1];
-
-	// get t parameter
-	for (i = 0; i < m; i++){
-		t[i] = s[i]/S;
-	}
+//	// get scaled arc length
+//	S = s[m-1];
+//	for (i = 0; i < m; i++)
+//		t[i] = s[i]/S;
 	
 	// get polar angle
+	for (i = 0; i < m; i++)
+		thet[i] = gsl_complex_abs(gsl_complex_arccos_real(x[i]/a));
+
+	// get meridional and azimuthal curvature
+	// cf. W F Harris (2006), Opthalmic Physiol Opt, 26-5, pp. 497-501
 	for (i = 0; i < m; i++){
-		thet[m] = gsl_complex_abs(gsl_complex_arccos_real(x[i]/b));
+		r2 = r[i]*r[i];
+		g = sqrt(1.0 + (a2/b2 - 1.0)*r2/b2); // local metric
+		cphi[i] = -a/(b2*g);
+		cs  [i] = -a/(b2*g*g*g);
 	}
 
-	// UNFINISHED (8/31/2015)
+	// get tilt angle
+	for (i = 0; i < m; i++){
+		psi[i] = gsl_complex_abs(gsl_complex_arccos_real(-r[i]*cphi[i]));
+		if (s[i] < 0.5*s[m-1])
+			psi[i] = -psi[i];
+	}
 
+	// get local surface area and volume
+	A[0] = 0.0;
+	V[0] = 0.0;
+	for (i = 0; i < m-1; i++){
+		i1 = i+1;
+		ds = s[i1] - s[i];
+		A[i1] = A[i] + 2*M_PI*r[i]*ds;
+		V[i1] = V[i] + M_PI*r[i]*r[i]*r[i]*(-cphi[i])*ds;
+	}
 
+	// get center of mass
+	double vlme = V[m-1];
+	double dxcom;
+	xcom[0] = 0;
+	for (i = 0; i < m-1; i++){
+		i1 = i + 1;
+		ds = s[i1] - s[i];
 
-
+		dxcom     = M_PI*r[i]*r[i]*r[i]*(-cphi[i])*x[i]*ds;
+		xcom[i1]  = xcom[i] + dxcom;
+		xcom[i1] /= vlme;
+	}
 }
 
 #endif

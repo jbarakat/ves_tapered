@@ -31,9 +31,9 @@ void rk4(int, int, double*, double, double, double, double, double *, double *);
 
 /* IMPLEMENTATIONS */
 
-/* Given t0 and y0 (with parameter p), integrate to y1 at t1
+/* Given t0 and y0 (with parameter p and source u), integrate to y1 at t1
  * using a fourth-order Runge-Kutta scheme. */
-void rk4(int ny, int nstep, double p*, double u0, double u1,
+void rk4(int ny, int nstep, double *p, double u0, double u1,
          double t0, double t1, double *y0, double *y1){
   int istep, iy, j;
   double t, u;

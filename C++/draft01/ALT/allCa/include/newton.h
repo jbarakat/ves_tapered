@@ -148,8 +148,8 @@ void fzero(int n, int m, int nrk, double *par, double *u,
   }
 }
 
-void jacob(int n, int m, int nrk, double, *par, double *u,
-           double *t, double *s, double *y,
+void jacob(int n, int m, int nrk, double *par, double *u,
+           double *t, double *y, double *s,
            double *F, double *DF){
   if (m % 2 == 0){
     cout << "Error: choose m to be odd." << endl;
@@ -166,7 +166,7 @@ void jacob(int n, int m, int nrk, double, *par, double *u,
   double sp[n], yp[n];
   double s0, s1;
   double t0, t1;
-	double u0, u1,
+	double u0, u1;
   double Ds = 0.0001;
   double Dy;
 
@@ -320,10 +320,10 @@ void jacob(int n, int m, int nrk, double, *par, double *u,
         Dy = yp[j] - y[jj];
         G [j *n  + k ] = Dy/Ds;
         DF[jj*mn + kk] = G[j*n + k];
-      }
+			}
     }
   }
-
+	
   // assign A and B to bottom left and right corners
   i   = m-1;
   ni  = i*n;
@@ -335,6 +335,15 @@ void jacob(int n, int m, int nrk, double, *par, double *u,
       DF[jj*mn + kk] = B[j*n + k];
     }
   }
+
+//	// for debugging : check the Jacobian matrix 
+//	// (large output, so keep m small)
+//	for (i = 0; i < mn; i++){
+//		for (j = 0; j < mn; j++){
+//			printf("%.1f ",DF[i*mn+j]);
+//		}
+//		cout << endl;
+//	}
 }
 
 #endif
