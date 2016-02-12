@@ -120,10 +120,16 @@ void fileCheckOutput(int v, int conf, bool &info){
 /* Read input .dat file containing the solution s. */
 void readInput(int n, int m, int v, int conf, double Ca, double *t, double *s){
   // error flags
-  if (n != 11){
-    cout << "Error: support only for n = 11." << endl;
+  if (n != 10){
+    cout << "Error: support only for n = 10." << endl;
 		return;
   }
+
+//  // error flags
+//  if (n != 11){
+//    cout << "Error: support only for n = 11." << endl;
+//		return;
+//  }
 
  // if (v != 65 && v != 70 && v != 75 && v!=80 && v != 85 && v != 90 && v != 95){
  //   cout << "Error: support only for v = 85, 90, 95." << endl;
@@ -289,22 +295,38 @@ void readInput(int n, int m, int v, int conf, double Ca, double *t, double *s){
 //			xcm[i1] = xcm[i] + dxcm;
 //		}
 //	}
-
-  // assemble the solution vector
+  
+	// assemble the solution vector
   for (i = 0; i < m; i++){
     s[i*n + 0 ] = r  [i];
-    s[i*n + 1 ] = x  [i];
-    s[i*n + 2 ] = psi[i];
-    s[i*n + 3 ] = p  [i];
-    s[i*n + 4 ] = sig[i];
-    s[i*n + 5 ] = A  [i];
-    s[i*n + 6 ] = V  [i];
-    s[i*n + 7 ] = Q  [i];
-    s[i*n + 8 ] = Rt [i];
+//    s[i*n + 1 ] = x  [i];
+    s[i*n + 1 ] = psi[i];
+    s[i*n + 2 ] = p  [i];
+    s[i*n + 3 ] = sig[i];
+    s[i*n + 4 ] = A  [i];
+    s[i*n + 5 ] = V  [i];
+    s[i*n + 6 ] = Q  [i];
+    s[i*n + 7 ] = Rt [i];
 //    s[i*n + 9 ] = xcm[i];
-    s[i*n + 9] = U  [i];
-    s[i*n + 10] = S  [i];
+    s[i*n + 8 ] = U  [i];
+    s[i*n + 9 ] = S  [i];
   }
+
+//  // assemble the solution vector
+//  for (i = 0; i < m; i++){
+//    s[i*n + 0 ] = r  [i];
+////    s[i*n + 1 ] = x  [i];
+//    s[i*n + 2 ] = psi[i];
+//    s[i*n + 3 ] = p  [i];
+//    s[i*n + 4 ] = sig[i];
+//    s[i*n + 5 ] = A  [i];
+//    s[i*n + 6 ] = V  [i];
+//    s[i*n + 7 ] = Q  [i];
+//    s[i*n + 8 ] = Rt [i];
+////    s[i*n + 9 ] = xcm[i];
+//    s[i*n + 9] = U  [i];
+//    s[i*n + 10] = S  [i];
+//  }
 }
 
 

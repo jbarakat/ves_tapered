@@ -41,23 +41,25 @@ using namespace std;
 void func(int ny, double Ca, double area, double vlme,
           double t, double *y, double *f){
   int i;
+  if (ny != 10)
+    cout << "Error: ny should equal 10." << endl;
   
-  if (ny != 11)
-    cout << "Error: ny should equal 11." << endl;
+//  if (ny != 11)
+//    cout << "Error: ny should equal 11." << endl;
   
 	// define variables
   double r   = y[0 ];
 //  double x   = y[1 ];
-  double psi = y[2 ];
-  double p   = y[3 ];
-  double sig = y[4 ];
-  double A   = y[5 ];
-  double V   = y[6 ];
-  double Q2  = y[7 ];
-  double R   = y[8 ];
+  double psi = y[1 ];
+  double p   = y[2 ];
+  double sig = y[3 ];
+  double A   = y[4 ];
+  double V   = y[5 ];
+  double Q2  = y[6 ];
+  double R   = y[7 ];
 //	double xcm = y[9 ];
-	double U   = y[9];
-  double S   = y[10];
+	double U   = y[8];
+  double S   = y[9 ];
   
 //  // define variables
 //  double r   = y[0 ];
@@ -115,17 +117,17 @@ void func(int ny, double Ca, double area, double vlme,
 
   	// calculate function
   	f[0 ] = -sin;
-		f[1 ] = cos;
-  	f[2 ] = -p/sig - cosr;
-  	f[3 ] = g*cos;
-  	f[4 ] = -e;
-  	f[5 ] = 2.0*M_PI*r;
-  	f[6 ] = M_PI*r2*cos;
-		f[7 ] = 0.0;
-  	f[8 ] = 0.0;
+//		f[1 ] = cos;
+  	f[1 ] = -p/sig - cosr;
+  	f[2 ] = g*cos;
+  	f[3 ] = -e;
+  	f[4 ] = 2.0*M_PI*r;
+  	f[5 ] = M_PI*r2*cos;
+		f[6 ] = 0.0;
+  	f[7 ] = 0.0;
 //  	f[9 ] = M_PI*r*r*x*cos/vlme;
+  	f[8] = 0.0;
   	f[9] = 0.0;
-  	f[10] = 0.0;
 	}
 	else { // approximate p, sig as constant 
 	       // and set dpsi/ds = -cos(psi)/r
@@ -133,17 +135,17 @@ void func(int ny, double Ca, double area, double vlme,
   	double sin = gsl_sf_sin(psi);
 		
 		f[0 ] = -sin;
-		f[1 ] = cos;
-		f[2 ] = -p/(2.0*sig);
+//		f[1 ] = cos;
+		f[1 ] = -p/(2.0*sig);
+		f[2 ] = 0.0;
 		f[3 ] = 0.0;
-		f[4 ] = 0.0;
-		f[5 ] = 2.0*M_PI*r;
-		f[6 ] = M_PI*r*r*cos;
-		f[7 ] = 0.0; 
-		f[8 ] = 0.0;
+		f[4 ] = 2.0*M_PI*r;
+		f[5 ] = M_PI*r*r*cos;
+		f[6 ] = 0.0; 
+		f[7 ] = 0.0;
 //  	f[9 ] = M_PI*r*r*x*cos/vlme;
+  	f[8] = 0.0;
   	f[9] = 0.0;
-  	f[10] = 0.0;
 	}
 
 	for (i = 0; i < ny; i++){

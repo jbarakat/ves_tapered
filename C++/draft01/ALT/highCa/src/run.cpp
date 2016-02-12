@@ -18,7 +18,7 @@ void init(int, int, int, int, double, double&, double&, double*, double*);
 
 int main(){
 	int    i, j, k, l;
-	int    n    = 11;		// size of solution vector
+	int    n    = 10;		// size of solution vector
 	int    m    = 105;	// number of shooting points
 	int    nrk;					// number of Runge-Kutta steps
 	int    v;						// reduced volume
@@ -389,20 +389,25 @@ void init(int n, int m, int v, int conf, double Ca,
 
 	// scale pressure and surface tension by Ca
 	for (i = 0; i < m; i++){
-		double p   = s[i*n + 3]/Ca;
-		double sig = s[i*n + 4]/Ca;
+		double p   = s[i*n + 2]/Ca;
+		double sig = s[i*n + 3]/Ca;
 
-		s[i*n + 3] = p  ;
-		s[i*n + 4] = sig;
+		s[i*n + 2] = p  ;
+		s[i*n + 3] = sig;
 	}
 	
 	// rescale all variables by pressure drop
 	double dp = s[0 + 2] - s[(m-1)*n + 2];
 	for (i = 0; i < m; i++){
-		s[i*n + 3 ] /= dp; // p
-		s[i*n + 4 ] /= dp; // sig
-		s[i*n + 7 ] /= dp; // Q2
-		s[i*n + 9 ] /= dp; // U
+		s[i*n + 2 ] /= dp; // p
+		s[i*n + 3 ] /= dp; // sig
+		s[i*n + 6 ] /= dp; // Q2
+		s[i*n + 8 ] /= dp; // U
 	}
+
+//	for (i = 0; i < m; i++){
+//		for (j = 0; j < n; j++){
+//		}
+//	}
 }
 
