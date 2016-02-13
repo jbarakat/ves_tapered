@@ -44,12 +44,8 @@ void func(int ny, double Ca, double area, double vlme,
   if (ny != 12)
     cout << "Error: ny should equal 12." << endl;
   
-//  if (ny != 11)
-//    cout << "Error: ny should equal 11." << endl;
-  
 	// define variables
   double r   = y[0 ];
-//  double x   = y[1 ];
   double psi = y[1 ];
   double p   = y[2 ];
   double sig = y[3 ];
@@ -57,26 +53,11 @@ void func(int ny, double Ca, double area, double vlme,
   double V   = y[5 ];
   double Q2  = y[6 ];
   double R   = y[7 ];
-//	double xcm = y[9 ];
 	double U   = y[8 ];
   double S   = y[9 ];
 	double x   = y[10];
 	double xcm = y[11];
   
-//  // define variables
-//  double r   = y[0 ];
-////  double x   = y[1 ];
-//  double psi = y[2 ];
-//  double p   = y[3 ];
-//  double sig = y[4 ];
-//  double A   = y[5 ];
-//  double V   = y[6 ];
-//  double Q2  = y[7 ];
-//  double R   = y[8 ];
-////	double xcm = y[9 ];
-//	double U   = y[9];
-//  double S   = y[10];
-
 	double R2 = R*R;
 	double UR = U*R;
 	
@@ -119,7 +100,6 @@ void func(int ny, double Ca, double area, double vlme,
 
   	// calculate function
   	f[0 ] = -sin;
-//		f[1 ] = cos;
   	f[1 ] = -p/sig - cosr;
   	f[2 ] = g*cos;
   	f[3 ] = -e;
@@ -127,9 +107,8 @@ void func(int ny, double Ca, double area, double vlme,
   	f[5 ] = M_PI*r2*cos;
 		f[6 ] = 0.0;
   	f[7 ] = 0.0;
-//  	f[9 ] = M_PI*r*r*x*cos/vlme;
-  	f[8] = 0.0;
-  	f[9] = 0.0;
+  	f[8 ] = 0.0;
+  	f[9 ] = 0.0;
 		f[10] = cos;
   	f[11] = M_PI*r*r*x*cos/vlme;
 	}
@@ -139,7 +118,6 @@ void func(int ny, double Ca, double area, double vlme,
   	double sin = gsl_sf_sin(psi);
 		
 		f[0 ] = -sin;
-//		f[1 ] = cos;
 		f[1 ] = -p/(2.0*sig);
 		f[2 ] = 0.0;
 		f[3 ] = 0.0;
@@ -147,9 +125,8 @@ void func(int ny, double Ca, double area, double vlme,
 		f[5 ] = M_PI*r*r*cos;
 		f[6 ] = 0.0; 
 		f[7 ] = 0.0;
-//  	f[9 ] = M_PI*r*r*x*cos/vlme;
-  	f[8] = 0.0;
-  	f[9] = 0.0;
+  	f[8 ] = 0.0;
+  	f[9 ] = 0.0;
 		f[10] = cos;
   	f[11] = M_PI*r*r*x*cos/vlme;
 	}
