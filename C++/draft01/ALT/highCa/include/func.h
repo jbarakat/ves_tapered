@@ -41,8 +41,8 @@ using namespace std;
 void func(int ny, double Ca, double area, double vlme,
           double t, double *y, double *f){
   int i;
-  if (ny != 11)
-    cout << "Error: ny should equal 11." << endl;
+  if (ny != 12)
+    cout << "Error: ny should equal 12." << endl;
   
 //  if (ny != 11)
 //    cout << "Error: ny should equal 11." << endl;
@@ -61,6 +61,7 @@ void func(int ny, double Ca, double area, double vlme,
 	double U   = y[8 ];
   double S   = y[9 ];
 	double x   = y[10];
+	double xcm = y[11];
   
 //  // define variables
 //  double r   = y[0 ];
@@ -130,6 +131,7 @@ void func(int ny, double Ca, double area, double vlme,
   	f[8] = 0.0;
   	f[9] = 0.0;
 		f[10] = cos;
+  	f[11] = M_PI*r*r*x*cos/vlme;
 	}
 	else { // approximate p, sig as constant 
 	       // and set dpsi/ds = -cos(psi)/r
@@ -149,6 +151,7 @@ void func(int ny, double Ca, double area, double vlme,
   	f[8] = 0.0;
   	f[9] = 0.0;
 		f[10] = cos;
+  	f[11] = M_PI*r*r*x*cos/vlme;
 	}
 
 	for (i = 0; i < ny; i++){

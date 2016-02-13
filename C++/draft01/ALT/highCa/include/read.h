@@ -120,8 +120,8 @@ void fileCheckOutput(int v, int conf, bool &info){
 /* Read input .dat file containing the solution s. */
 void readInput(int n, int m, int v, int conf, double Ca, double *t, double *s){
   // error flags
-  if (n != 11){
-    cout << "Error: support only for n = 11." << endl;
+  if (n != 12){
+    cout << "Error: support only for n = 12." << endl;
 		return;
   }
 
@@ -279,22 +279,22 @@ void readInput(int n, int m, int v, int conf, double Ca, double *t, double *s){
 		xcm[i1] = xcm[i] + dxcm;
 	}
 
-//	// shift origin to center of mass, then recalculate x and xcm
-//	for (j = 0; j < 5; j++){ // repeat several times to improve accuracy
-//		for (i = 0; i < m; i++){
-//			x[i] = x[i] - xcm[m-1];
-//		}
-//		
-//		for (i = 0; i < m-1; i++){
-//			i1 = i + 1;
-//			ds   = S[0]*(t[i1] - t[i]);
-//			dx   = gsl_sf_cos(psi[i])*ds;
-//			dxcm = M_PI*r[i]*r[i]*x[i]*dx/V[m-1];
-//	
-//			x  [i1] = x  [i] + dx  ;
-//			xcm[i1] = xcm[i] + dxcm;
-//		}
-//	}
+	// shift origin to center of mass, then recalculate x and xcm
+	for (j = 0; j < 5; j++){ // repeat several times to improve accuracy
+		for (i = 0; i < m; i++){
+			x[i] = x[i] - xcm[m-1];
+		}
+		
+		for (i = 0; i < m-1; i++){
+			i1 = i + 1;
+			ds   = S[0]*(t[i1] - t[i]);
+			dx   = gsl_sf_cos(psi[i])*ds;
+			dxcm = M_PI*r[i]*r[i]*x[i]*dx/V[m-1];
+	
+			x  [i1] = x  [i] + dx  ;
+			xcm[i1] = xcm[i] + dxcm;
+		}
+	}
   
 	// assemble the solution vector
   for (i = 0; i < m; i++){
@@ -311,6 +311,7 @@ void readInput(int n, int m, int v, int conf, double Ca, double *t, double *s){
     s[i*n + 8 ] = U  [i];
     s[i*n + 9 ] = S  [i];
     s[i*n + 10] = x  [i];
+    s[i*n + 11] = xcm[i];
   }
 
 //  // assemble the solution vector
