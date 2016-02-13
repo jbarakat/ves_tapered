@@ -18,7 +18,7 @@ void init(int, int, int, int, double, double&, double&, double*, double*);
 
 int main(){
 	int    i, j, k, l;
-	int    n    = 10;		// size of solution vector
+	int    n    = 11;		// size of solution vector
 	int    m    = 105;	// number of shooting points
 	int    nrk;					// number of Runge-Kutta steps
 	int    v;						// reduced volume

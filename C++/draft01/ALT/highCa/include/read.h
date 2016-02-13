@@ -120,8 +120,8 @@ void fileCheckOutput(int v, int conf, bool &info){
 /* Read input .dat file containing the solution s. */
 void readInput(int n, int m, int v, int conf, double Ca, double *t, double *s){
   // error flags
-  if (n != 10){
-    cout << "Error: support only for n = 10." << endl;
+  if (n != 11){
+    cout << "Error: support only for n = 11." << endl;
 		return;
   }
 
@@ -310,6 +310,7 @@ void readInput(int n, int m, int v, int conf, double Ca, double *t, double *s){
 //    s[i*n + 9 ] = xcm[i];
     s[i*n + 8 ] = U  [i];
     s[i*n + 9 ] = S  [i];
+    s[i*n + 10] = x  [i];
   }
 
 //  // assemble the solution vector
