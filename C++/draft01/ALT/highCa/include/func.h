@@ -37,8 +37,13 @@ void func(int ny, double *par,
 
 	// define parameters
 	double v    = par[0];
+	double R0   = par[1];
+	double alph = par[2];
+	double ur   = 0.0;
+
 	double area = 4.0*M_PI;
 	double vlme = 4.0*M_PI*v/3.0;
+	double tana = gsl_sf_sin(alph)/gsl_sf_cos(alph);
   
 	// define variables
   double r   = y[0 ];
@@ -66,7 +71,6 @@ void func(int ny, double *par,
 	
 	if (r > 0.002){ // check if far from end caps
   	double r2  = r*r;
-  //	double a   = 2*M_PI*r;
   	double cos = gsl_sf_cos(psi);
   	double sin = gsl_sf_sin(psi);
   	double log = gsl_sf_log(r/R);
@@ -101,8 +105,8 @@ void func(int ny, double *par,
   	f[3 ] = -e;
   	f[4 ] = 2.0*M_PI*r;
   	f[5 ] = M_PI*r2*cos;
-		f[6 ] = 0.0;
-  	f[7 ] = 0.0;
+		f[6 ] = (-r*ur + UR*tana)*cos/R0;
+  	f[7 ] = -tana*cos;
   	f[8 ] = 0.0;
   	f[9 ] = 0.0;
 		f[10] = cos;
@@ -119,8 +123,8 @@ void func(int ny, double *par,
 		f[3 ] = 0.0;
 		f[4 ] = 2.0*M_PI*r;
 		f[5 ] = M_PI*r*r*cos;
-		f[6 ] = 0.0; 
-		f[7 ] = 0.0;
+		f[6 ] = (-r*ur + UR*tana)*cos/R0;
+  	f[7 ] = -tana*cos;
   	f[8 ] = 0.0;
   	f[9 ] = 0.0;
 		f[10] = cos;

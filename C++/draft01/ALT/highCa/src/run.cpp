@@ -24,7 +24,7 @@ int main(){
 	int    i, j, k, l;
 	int    n    = 12;		// size of solution vector
 	int    m    = 105;	// number of shooting points
-	int    nrk;					// number of Runge-Kutta steps
+	int    nrk  = 50;		// number of Runge-Kutta steps
 	int    v;						// reduced volume
 	int    conf;				// maximum radius
 	int    flag;				// error flag
@@ -37,8 +37,9 @@ int main(){
 	vector<double> t(m), si(n*m), sm(n*m), sf(n*m);
 	
 	// parameters
-	double Ca, area, vlme;
-	double redvol, tubrad;
+	double par[10];
+	double Ca, area, vlme, alph;
+	double redvol, tubrad, tapang;
 	double dC0, dC1, slope;
 	vector<double> vecCa;
 	vector<int   > vecVr;
@@ -63,7 +64,7 @@ int main(){
 	for (l = 0; l < vecVr.size(); l++){
 		v = vecVr[l];
 
-		// loop over confinement parameter
+		// loop over confinement
 		for (k = 0; k < vecCf.size(); k++){
 			conf = vecCf[k];
 
@@ -88,73 +89,27 @@ int main(){
 			}
 
 			// initialize
-			nrk = 50;
-			cout << "Initializing... " << endl;
-			init(n, m, v, conf, Ca, redvol, tubrad, t.data(), si.data());
-			for (j = 0; j < m*n; j++){
-				sm[j] = si[j];
+			if (l == 0 && k == 0){
+				cout << "Initializing... " << endl;
 			}
-			cout << "Initialization complete." << endl;
-			
-//			// check neighboring solutions
-//			fileCheckOutput(v, (conf-1)/10, info); // for very high confinement, e.g. conf = 991
-//			if (info){ // file exists
-//				readOutput(n, m, v, (conf-1)/10, t.data(), si.data());
-//				for (j = 0; j < m*n; j++){
-//					sm[j] = si[j];
-//				}
-//			}
-//
-//			fileCheckOutput(v, conf-1, info);
-//			if (info){ // file exists
-//				readOutput(n, m, v, conf-1, t.data(), si.data());
-//				for (j = 0; j < m*n; j++){
-//					sm[j] = si[j];
-//				}
-//			}
+			init(n, m, v, conf, Ca, redvol, tubrad, t.data(), si.data());
 
+			/* update next initial guess using
+			 * numerical continuation */
+			if (l > 0 || k > 0){	
+				if (flag == 0){
+					cout << "Continuing from last solution..." << endl;
+					for (j = 0; j < m*n; j++){
+						si[j] = sf[j];
+					}
+				}
+			}
 
-
+			tapang = 0.01;
 			
-		//	fileCheckOutput(v, conf+1, info);
-		//	if (info){ // file exists
-		//		readOutput(n, m, v, conf+1, t.data(), si.data());
-		//		for (j = 0; j < m*n; j++){
-		//			sm[j] = si[j];
-		//		}
-		//	}
-			
-		//	fileCheckOutput(v-1, conf, info);
-		//	if (info){ // file exists
-		//		readOutput(n, m, v-1, conf, t.data(), si.data());
-		//		for (j = 0; j < m*n; j++){
-		//			sm[j] = si[j];
-		//		}
-		//	}
-			
-		//	fileCheckOutput(v+1, conf, info);
-		//	if (info){ // file exists
-		//		readOutput(n, m, v+1, conf, t.data(), si.data());
-		//		for (j = 0; j < m*n; j++){
-		//			sm[j] = si[j];
-		//		}
-		//	}
-
-		//	fileCheckOutput(v, conf, info); 
-		//	if (info){ // file exists
-		//		readOutput(n, m, v, conf, t.data(), si.data());
-		//		for (j = 0; j < m*n; j++){
-		//			sm[j] = si[j];
-		//		}
-		//	}
-			
-			double par[2];
 			par[0] = redvol;
 			par[1] = tubrad;
-
-		//	par[0] = redvol;
-		//	par[1] = tubrad;
-		//	par[2] = vlme;
+			par[2] = tapang;
 
 			// multiple shooting method
 			cout << "Shooting for v = " << 0.01*v << ", conf = 0."  << conf << "." << endl;
@@ -194,7 +149,7 @@ void init(int n, int m, int v, int conf, double &Ca,
 	// set area and volume
 	area = 4.0*M_PI*a*a;
 	vlme = (4.0/3.0)*M_PI*a*a*a*(0.01*double(v));
-
+	
 	// read file
 	if (conf < 100)
 		readInput(n, m, v, conf, Ca, T.data(), S.data());
@@ -250,7 +205,7 @@ void init(int n, int m, int v, int conf, double &Ca,
 		s[i*n + 10] /= a ; // x
 		s[i*n + 11] /= a ; // xcm
 	}
-
+	
 	// get tube radius and reduced volume
 	redvol = vlme/(4.0*M_PI*a3/3.0);
 	tubrad = 1.0/a;

@@ -19,6 +19,7 @@
 
 /* HEADER FILES */
 #include <math.h>
+#include <gsl/gsl_sf_trig.h>
 
 /* PROTOTYPES */
 void bcond(int, double*, double*, double*, double*);
@@ -43,17 +44,22 @@ void bcond(int n, double *par,
 	
 	// define parameters
 	double v    = par[0];
+	double R0   = par[1];
+	double alph = par[2];
+
 	double area = 4.0*M_PI;
 	double vlme = 4.0*M_PI*v/3.0;
+	double tana = gsl_sf_sin(alph)/gsl_sf_cos(alph);
   
 	// matrix of coefficients for BC at t = 0
-  A[0 *n + 0 ] =  1; // r  (0) = 0
-  A[1 *n + 1 ] =  1; // psi(0) = -M_PI/2
-  A[2 *n + 2 ] =  1; // p  (0) - p(1) = 1
-  A[3 *n + 4 ] =  1; // A  (0) = 0
-  A[4 *n + 5 ] =  1; // V  (0) = 0
-  A[5 *n + 7 ] =  1; // R  (0) = 1
-  A[6 *n + 11] =  1; // xcm(0) = 0
+  A[0 *n + 0 ] =  1   ; // r  (0) = 0
+  A[1 *n + 1 ] =  1   ; // psi(0) = -M_PI/2
+  A[2 *n + 2 ] =  1   ; // p  (0) - p(1) = 1
+  A[3 *n + 4 ] =  1   ; // A  (0) = 0
+  A[4 *n + 5 ] =  1   ; // V  (0) = 0
+  A[5 *n + 7 ] =  1   ; // R  (0) + tana*x(0) = R0
+  A[5 *n + 10] =  tana;
+  A[6 *n + 11] =  1   ; // xcm(0) = 0
   
   // matrix of coefficients for BC at t = 1
   B[2 *n + 2 ] = -1; // p  (0) - p(1) = 1
@@ -64,10 +70,9 @@ void bcond(int n, double *par,
   B[11*n + 11] =  1; // xcm(1) = 0
 
   // right-hand side vector
-	double a = sqrt(area/(4.0*M_PI));
   c[1 ] = -PIH;
   c[2 ] =  1.0;
-  c[5 ] =  1.0/a;
+  c[5 ] =  R0;
   c[8 ] =  PIH;
   c[9 ] =  area;
   c[10] =  vlme;
