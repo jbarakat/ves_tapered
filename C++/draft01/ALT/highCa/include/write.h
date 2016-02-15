@@ -41,18 +41,18 @@ using namespace std;
 /* IMPLEMENTATIONS */
 
 /* Write .dat file. */
-void writeSoln(int n, int m, int v, int conf,
+void writeSoln(int n, int m, int *id,
                double *t, double *s, string path){
 	// error flag
-	if (n != 8){
-		cout << "Error: support only for n = 8." << endl;
+	if (n != 12){
+		cout << "Error: support only for n = 12." << endl;
 		return;
 	}
 
 	// declare variables
 	int i;
-	int width = 14;
-	ostringstream ssRedVol, ssConfin;
+	int width = 12;
+	ostringstream ssRedVol, ssTapAng;
 	ostringstream header;
 	ofstream file;
 	string dir, fn, line;
@@ -75,16 +75,18 @@ void writeSoln(int n, int m, int v, int conf,
 	}
 
 	// convert integers to strings
+	int v    = id[0];
+	int alph = id[1];
 	ssRedVol << v   ;
-	ssConfin << conf;
+	ssTapAng << alph;
 	
 	// set directory
 	dir = path + "/v"    + ssRedVol.str() 
-	           + "/conf" + ssConfin.str();
+	           + "/a00"  + ssTapAng.str();
 	
 	// set filename
 	fn = "/sln_v" + ssRedVol.str()
-	   + "_conf"  + ssConfin.str() 
+	   + "_a00"  + ssTapAng.str() 
 		 + "_CaInf" ;
 	fn.erase(remove(fn.begin(), fn.end(), '.'), fn.end());
 	fn = dir + fn + ".dat";
@@ -96,30 +98,40 @@ void writeSoln(int n, int m, int v, int conf,
 				 << setw(width)   << "psi"
 				 << setw(width)   << "cs"
 				 << setw(width)   << "qs"
-	       << setw(width+4) << "p" 
-				 << setw(width+4) << "sig"
+	       << setw(width)   << "p" 
+				 << setw(width)   << "sig"
 				 << setw(width)   << "A"
 				 << setw(width)   << "V"
 				 << setw(width)   << "Q2"
-				 << setw(width)   << "S";
+				 << setw(width)   << "R"
+				 << setw(width)   << "U"
+				 << setw(width)   << "S"
+				 << setw(width)   << "x"
+				 << setw(width)   << "xcm";
 	file << header.str() << endl;
 	for (i = 0; i < m; i++){
 		ostringstream tt, r, psi, cs, qs, p, 
-		                  sig, A, V , Q , S;
+		                  sig, A, V , Q , S,
+											U, R, x, xcm;
 		tt  << fixed << setw(width)   << t[i];
-		r   << fixed << setw(width)   << s[i*n + 0];
-		psi << fixed << setw(width)   << s[i*n + 1];
-		cs  << fixed << setw(width)   << CS[i]     ;
-		qs  << fixed << setw(width)   << QS[i]     ;
-		p   << fixed << setw(width+4) << s[i*n + 2];
-		sig << fixed << setw(width+4) << s[i*n + 3];
-		A   << fixed << setw(width)   << s[i*n + 4];
-		V   << fixed << setw(width)   << s[i*n + 5];
-		Q   << fixed << setw(width)   << s[i*n + 6];
-		S   << fixed << setw(width)   << s[i*n + 7];
+		r   << fixed << setw(width)   << s[i*n + 0 ];
+		psi << fixed << setw(width)   << s[i*n + 1 ];
+		cs  << fixed << setw(width)   << CS[i]      ;
+		qs  << fixed << setw(width)   << QS[i]      ;
+		p   << fixed << setw(width)   << s[i*n + 2 ];
+		sig << fixed << setw(width)   << s[i*n + 3 ];
+		A   << fixed << setw(width)   << s[i*n + 4 ];
+		V   << fixed << setw(width)   << s[i*n + 5 ];
+		Q   << fixed << setw(width)   << s[i*n + 6 ];
+		R   << fixed << setw(width)   << s[i*n + 7 ];
+		U   << fixed << setw(width)   << s[i*n + 8 ];
+		S   << fixed << setw(width)   << s[i*n + 9 ];
+		x   << fixed << setw(width)   << s[i*n + 10];
+		xcm << fixed << setw(width)   << s[i*n + 11];
 		
 		line = tt.str() + r.str() + psi.str() + cs.str() + qs.str()
-		     + p.str() + sig.str() + A.str() + V .str() + Q .str() + S.str();
+		     + p.str() + sig.str() + A.str() + V .str() + Q .str() 
+				 + R.str() + U.str() + S.str() + x.str() + xcm.str();
 
 		file << line << endl;
 	}

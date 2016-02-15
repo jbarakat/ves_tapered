@@ -17,6 +17,7 @@
 void init(int, int, int, int, double &, double&, double&, double*, double*);
 void getCa(bool, vector<double>&);
 void getVr(bool, vector<int   >&);
+void getTa(bool, vector<int   >&);
 void getCf(bool, vector<int   >&);
 void getCritCf(int, double&);
 
@@ -29,6 +30,7 @@ int main(){
 	int    conf;				// maximum radius
 	int    flag;				// error flag
 	bool   info;				// boolean flag for file check
+	int    id[10];			// identifier for file saving
 
 	// output directory
 	string opath = "../output";
@@ -44,6 +46,7 @@ int main(){
 	vector<double> vecCa;
 	vector<int   > vecVr;
 	vector<int   > vecCf;
+	vector<int   > vecTa;
 
 	// initialize Ca
 	Ca = 10000;
@@ -55,8 +58,12 @@ int main(){
 	// get vector of reduced volumes
 	bool flipVr = true;
 	getVr(flipVr, vecVr);
+	
+	// get vector of taper angle
+	bool flipTa = false;
+	getTa(flipTa, vecTa);
 
-	// get vector of confinement parameters
+	// get vector of confinement
 	bool flipCf = false;
 	getCf(flipCf, vecCf);
 
@@ -115,9 +122,11 @@ int main(){
 			cout << "Shooting for v = " << 0.01*v << ", conf = 0."  << conf << "." << endl;
 			mshoot(n, m, nrk, par, t.data(), si.data(), sf.data(), flag);
 			
-//			// write to file
-//			if (flag == 0)
-//				writeSoln(n, m, v, conf, t.data(), sf.data(), opath);
+			// write to file
+			id[0] = v;
+			id[1] = 1;
+			if (flag == 0)
+				writeSoln(n, m, id, t.data(), sf.data(), opath);
 		}
 	}
 
@@ -232,6 +241,15 @@ void getCa(bool flip, vector<double>& vecCa){
 	vecCa.push_back(   0.0010);
 }
 
+void getTa(bool flip, vector<int>& vecTa){
+	// range of taper angle
+	vecTa.push_back(0);
+	vecTa.push_back(1);
+	vecTa.push_back(2);
+	vecTa.push_back(3);
+	vecTa.push_back(4);
+	vecTa.push_back(5);
+}
 
 void getVr(bool flip, vector<int>& vecVr){
 	// range of reduced volumes
