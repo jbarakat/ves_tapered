@@ -7,8 +7,7 @@
  *  
  * PARAMETERS
  *  n			[input]		number of ODEs
- *  area	[input]		total surface area (parameter #1)
- *  vlme	[input]		total volume (parameter #2)
+ *  par		[input]		parameters
  *  A			[output]	matrix of coefficients at t = 0
  *  B			[output]	matrix of coefficients at t = 1
  *  c			[output]	right-hand side vector
@@ -41,9 +40,11 @@ void bcond(int n, double *par,
     }
     c[i] = 0;
   }
-
-	double area = par[1];
-	double vlme = par[2];
+	
+	// define parameters
+	double v    = par[0];
+	double area = 4.0*M_PI;
+	double vlme = 4.0*M_PI*v/3.0;
   
 	// matrix of coefficients for BC at t = 0
   A[0 *n + 0 ] =  1; // r  (0) = 0
@@ -63,9 +64,10 @@ void bcond(int n, double *par,
   B[11*n + 11] =  1; // xcm(1) = 0
 
   // right-hand side vector
+	double a = sqrt(area/(4.0*M_PI));
   c[1 ] = -PIH;
   c[2 ] =  1.0;
-  c[5 ] =  1.0;
+  c[5 ] =  1.0/a;
   c[8 ] =  PIH;
   c[9 ] =  area;
   c[10] =  vlme;

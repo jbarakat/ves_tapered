@@ -6,19 +6,10 @@
  *  
  * PARAMETERS
  *  ny					[input]		number of ODEs
+ *  par					[input]		parameters
  *  t						[input]		abscissas
  *  y						[input]		solution
- *  f						[input]		function
- *  r   = y[0]  [input]		radius
- *  psi = y[1]  [input]		tilt angle
- *  cs  = y[2]  [input]		meridional curvature
- *  qs  = y[3]  [input]		transverse shear tension
- *  p   = y[4]  [input]		pressure
- *  sig = y[5]  [input]		mean tension
- *  A   = y[6]  [input]		total surface area
- *  V   = y[7]  [input]		total volume
- *  Q2  = y[8]  [input]		leakback flux
- *  S   = y[9]  [input]		total meridional arc length
+ *  f						[output]	function
  */
 
 #ifndef FUNC_H
@@ -45,9 +36,9 @@ void func(int ny, double *par,
     cout << "Error: ny should equal 12." << endl;
 
 	// define parameters
-	double Ca   = par[0];
-	double area = par[1];
-	double vlme = par[2];
+	double v    = par[0];
+	double area = 4.0*M_PI;
+	double vlme = 4.0*M_PI*v/3.0;
   
 	// define variables
   double r   = y[0 ];

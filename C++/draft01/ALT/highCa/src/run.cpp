@@ -14,7 +14,11 @@
 #include "../include/read.h"
 #include "../include/write.h"
 
-void init(int, int, int, int, double, double&, double&, double*, double*);
+void init(int, int, int, int, double &, double&, double&, double*, double*);
+void getCa(bool, vector<double>&);
+void getVr(bool, vector<int   >&);
+void getCf(bool, vector<int   >&);
+void getCritCf(int, double&);
 
 int main(){
 	int    i, j, k, l;
@@ -34,6 +38,7 @@ int main(){
 	
 	// parameters
 	double Ca, area, vlme;
+	double redvol, tubrad;
 	double dC0, dC1, slope;
 	vector<double> vecCa;
 	vector<int   > vecVr;
@@ -42,129 +47,18 @@ int main(){
 	// initialize Ca
 	Ca = 10000;
 
-	// range of capillary number (for input file only)
-	vecCa.push_back(1000.0   );
-	vecCa.push_back( 100.0   );
-	vecCa.push_back(  10.0   );
-	vecCa.push_back(   1.0   );
-	vecCa.push_back(   0.0010);
+	// get vector of capillary numbers
+	bool flipCa = false;
+	getCa(flipCa, vecCa);
 
-	// range of reduced volumes
-//	vecVr.push_back(60);
-//	vecVr.push_back(61);
-//	vecVr.push_back(62);
-//	vecVr.push_back(63);
-//	vecVr.push_back(64);
-	vecVr.push_back(65);
-//	vecVr.push_back(66);
-//	vecVr.push_back(67);
-//	vecVr.push_back(68);
-//	vecVr.push_back(69);
+	// get vector of reduced volumes
+	bool flipVr = true;
+	getVr(flipVr, vecVr);
 
-	vecVr.push_back(70);
-//	vecVr.push_back(71);
-//	vecVr.push_back(72);
-//	vecVr.push_back(73);
-//	vecVr.push_back(74);
-	vecVr.push_back(75);
-//	vecVr.push_back(76);
-//	vecVr.push_back(77);
-//	vecVr.push_back(78);
-//	vecVr.push_back(79);
-	
-	vecVr.push_back(80);
-//	vecVr.push_back(81);
-//	vecVr.push_back(82);
-//	vecVr.push_back(83);
-//	vecVr.push_back(84);
-	vecVr.push_back(85);
-//	vecVr.push_back(86);
-//	vecVr.push_back(87);
-//	vecVr.push_back(88);
-//	vecVr.push_back(89);
+	// get vector of confinement parameters
+	bool flipCf = false;
+	getCf(flipCf, vecCf);
 
-	vecVr.push_back(90);
-//	vecVr.push_back(91);
-//	vecVr.push_back(92);
-//	vecVr.push_back(93);
-//	vecVr.push_back(94);
-//	vecVr.push_back(95);
-//	vecVr.push_back(96);
-//	vecVr.push_back(97);
-//	vecVr.push_back(98);
-//	vecVr.push_back(99);
-//	//vecVr.push_back(100);
-
-	// optional: flip vecVr so largest values appear first
-	int nVr = vecVr.size();
-	vector<int> vecVrTmp;
-	for (i = 0; i < vecVr.size(); i++){
-		v = vecVr[nVr-i-1];
-		vecVrTmp.push_back(v);
-	}
-	for (i = 0; i < vecVr.size(); i++){
-		v = vecVrTmp[i];
-		vecVr[i] = v;
-	}
-
-	// range of confinement parameter
-//	vecCf.push_back(70);
-//	vecCf.push_back(71);
-//	vecCf.push_back(72);
-//	vecCf.push_back(73);
-//	vecCf.push_back(74);
-//	vecCf.push_back(75);
-//	vecCf.push_back(76);
-//	vecCf.push_back(77);
-//	vecCf.push_back(78);
-//	vecCf.push_back(79);
-
-	vecCf.push_back(80);
-	vecCf.push_back(81);
-	vecCf.push_back(82);
-	vecCf.push_back(83);
-	vecCf.push_back(84);
-	vecCf.push_back(85);
-	vecCf.push_back(86);
-	vecCf.push_back(87);
-	vecCf.push_back(88);
-	vecCf.push_back(89);
-
-	vecCf.push_back(90);
-	vecCf.push_back(91);
-	vecCf.push_back(92);
-	vecCf.push_back(93);
-	vecCf.push_back(94);
-	vecCf.push_back(95);
-	vecCf.push_back(96);
-	vecCf.push_back(97);
-	vecCf.push_back(98);
-	vecCf.push_back(99);
-
-	vecCf.push_back(991);
-	vecCf.push_back(992);
-	vecCf.push_back(993);
-	vecCf.push_back(994);
-	vecCf.push_back(995);
-	vecCf.push_back(996);
-	vecCf.push_back(997);
-	vecCf.push_back(998);
-	vecCf.push_back(999);
-
-//	// optional: flip vecCf so largest values appear first
-//	int nCf = vecCf.size();
-//	vector<int> vecCfTmp;
-//	for (i = 0; i < vecCf.size(); i++){
-//		conf = vecCf[nCf-i-1];
-//		vecCfTmp.push_back(conf);
-//	}
-//	for (i = 0; i < vecCf.size(); i++){
-//		conf = vecCfTmp[i];
-//		vecCf[i] = conf;
-//	}
-	
-
-	
 	// loop over reduced volume
 	for (l = 0; l < vecVr.size(); l++){
 		v = vecVr[l];
@@ -196,7 +90,7 @@ int main(){
 			// initialize
 			nrk = 50;
 			cout << "Initializing... " << endl;
-			init(n, m, v, conf, Ca, area, vlme, t.data(), si.data());
+			init(n, m, v, conf, Ca, redvol, tubrad, t.data(), si.data());
 			for (j = 0; j < m*n; j++){
 				sm[j] = si[j];
 			}
@@ -254,14 +148,16 @@ int main(){
 		//		}
 		//	}
 			
-			double par[3];
-			par[0] = Ca;
-			par[1] = area;
-			par[2] = vlme;
+			double par[2];
+			par[0] = redvol;
+			par[1] = tubrad;
+
+		//	par[0] = redvol;
+		//	par[1] = tubrad;
+		//	par[2] = vlme;
 
 			// multiple shooting method
-			cout << "Shooting for v = " << 0.01*v << ", conf = 0." 
-			     << conf << ", Ca = " << Ca << "." << endl;
+			cout << "Shooting for v = " << 0.01*v << ", conf = 0."  << conf << "." << endl;
 			mshoot(n, m, nrk, par, t.data(), si.data(), sf.data(), flag);
 			
 //			// write to file
@@ -273,13 +169,240 @@ int main(){
 	return(0);
 }
 
-void init(int n, int m, int v, int conf, double Ca,
-          double &area, double &vlme, double *t, double *s){
+
+
+
+
+
+void init(int n, int m, int v, int conf, double &Ca,
+          double &redvol, double &tubrad, double *t, double *s){
 	// declare variables
 	int    i, j;
-	double crit;
+	double crit, area, vlme;
 	vector<double> T(m), S(m*n);
 
+	// get critical confinement for given reduced volume
+	getCritCf(v, crit);
+
+	// set nominal radius
+	double a, a2, a3;
+	if (conf < 100)
+		a = 0.01*double(conf)*crit;
+	else 
+		a = 0.001*double(conf)*crit;
+	
+	// set area and volume
+	area = 4.0*M_PI*a*a;
+	vlme = (4.0/3.0)*M_PI*a*a*a*(0.01*double(v));
+
+	// read file
+	if (conf < 100)
+		readInput(n, m, v, conf, Ca, T.data(), S.data());
+	else
+		readInput(n, m, v, 99, Ca, T.data(), S.data());
+
+	// copy abscissa and solution vectors
+	for (i = 0; i < m; i++){
+		t[i] = T[i];
+		for (j = 0; j < n; j++){
+			s[i*n + j] = S[i*n + j];
+		}
+	}
+
+	/* NOTE: The variables read in from the input files are scaled by
+	 * the bending modulus, tube radius, and suspending fluid viscosity.
+	 * Need to switch to a set of dimensionless variables that use the
+	 * pressure drop, nominal vesicle radius, and suspending fluid viscosity
+	 * as the characteristic scales (see below). */
+
+	// scale pressure and surface tension by Ca (this uses
+	// the linear velocity instead of the bending modulus
+	// as the characteristic scale)
+	for (i = 0; i < m; i++){
+		double p   = s[i*n + 2]/Ca;
+		double sig = s[i*n + 3]/Ca;
+
+		s[i*n + 2] = p  ;
+		s[i*n + 3] = sig;
+	}
+	
+	// rescale all variables by pressure drop
+	double dp = s[0 + 2] - s[(m-1)*n + 2];
+	for (i = 0; i < m; i++){
+		s[i*n + 2 ] /= dp; // p
+		s[i*n + 3 ] /= dp; // sig
+		s[i*n + 6 ] /= dp; // Q2
+		s[i*n + 8 ] /= dp; // U
+	}
+
+	// rescale all variables by the nominal radius of the vesicle
+	a  = sqrt(area/(4.0*M_PI));
+	a2 = a*a;
+	a3 = a*a*a;
+	for (i = 0; i < m; i++){
+		s[i*n + 0 ] /= a ; // r
+		s[i*n + 2 ] *= a ; // p
+		s[i*n + 4 ] /= a2; // A 
+		s[i*n + 5 ] /= a3; // V
+		s[i*n + 6 ] /= a ; // Q2
+		s[i*n + 7 ] /= a ; // Rt
+		s[i*n + 9 ] /= a ; // S
+		s[i*n + 10] /= a ; // x
+		s[i*n + 11] /= a ; // xcm
+	}
+
+	// get tube radius and reduced volume
+	redvol = vlme/(4.0*M_PI*a3/3.0);
+	tubrad = 1.0/a;
+
+	// scale area and volume wrt nominal radius of vesicle
+	area = area/a2;
+	vlme = vlme/a3;
+}
+
+
+
+
+
+
+
+
+
+void getCa(bool flip, vector<double>& vecCa){
+	// range of capillary number (for input file only)
+	vecCa.push_back(1000.0   );
+	vecCa.push_back( 100.0   );
+	vecCa.push_back(  10.0   );
+	vecCa.push_back(   1.0   );
+	vecCa.push_back(   0.0010);
+}
+
+
+void getVr(bool flip, vector<int>& vecVr){
+	// range of reduced volumes
+//	vecVr.push_back(60);
+//	vecVr.push_back(61);
+//	vecVr.push_back(62);
+//	vecVr.push_back(63);
+//	vecVr.push_back(64);
+	vecVr.push_back(65);
+//	vecVr.push_back(66);
+//	vecVr.push_back(67);
+//	vecVr.push_back(68);
+//	vecVr.push_back(69);
+
+	vecVr.push_back(70);
+//	vecVr.push_back(71);
+//	vecVr.push_back(72);
+//	vecVr.push_back(73);
+//	vecVr.push_back(74);
+	vecVr.push_back(75);
+//	vecVr.push_back(76);
+//	vecVr.push_back(77);
+//	vecVr.push_back(78);
+//	vecVr.push_back(79);
+	
+	vecVr.push_back(80);
+//	vecVr.push_back(81);
+//	vecVr.push_back(82);
+//	vecVr.push_back(83);
+//	vecVr.push_back(84);
+	vecVr.push_back(85);
+//	vecVr.push_back(86);
+//	vecVr.push_back(87);
+//	vecVr.push_back(88);
+//	vecVr.push_back(89);
+
+	vecVr.push_back(90);
+//	vecVr.push_back(91);
+//	vecVr.push_back(92);
+//	vecVr.push_back(93);
+//	vecVr.push_back(94);
+	vecVr.push_back(95);
+//	vecVr.push_back(96);
+//	vecVr.push_back(97);
+//	vecVr.push_back(98);
+//	vecVr.push_back(99);
+//	//vecVr.push_back(100);
+
+	// optional: flip vecVr so largest values appear first
+	if (flip){
+		int v, i;
+		vector<int> vecVrTmp;
+		int nVr = vecVr.size();
+		for (i = 0; i < vecVr.size(); i++){
+			v = vecVr[nVr-i-1];
+			vecVrTmp.push_back(v);
+		}
+		for (i = 0; i < vecVr.size(); i++){
+			v = vecVrTmp[i];
+			vecVr[i] = v;
+		}
+	}
+}
+
+void getCf(bool flip, vector<int>& vecCf){
+	// range of confinement parameter
+//	vecCf.push_back(70);
+//	vecCf.push_back(71);
+//	vecCf.push_back(72);
+//	vecCf.push_back(73);
+//	vecCf.push_back(74);
+//	vecCf.push_back(75);
+//	vecCf.push_back(76);
+//	vecCf.push_back(77);
+//	vecCf.push_back(78);
+//	vecCf.push_back(79);
+
+	vecCf.push_back(80);
+	vecCf.push_back(81);
+	vecCf.push_back(82);
+	vecCf.push_back(83);
+	vecCf.push_back(84);
+	vecCf.push_back(85);
+	vecCf.push_back(86);
+	vecCf.push_back(87);
+	vecCf.push_back(88);
+	vecCf.push_back(89);
+
+	vecCf.push_back(90);
+	vecCf.push_back(91);
+	vecCf.push_back(92);
+	vecCf.push_back(93);
+	vecCf.push_back(94);
+	vecCf.push_back(95);
+	vecCf.push_back(96);
+	vecCf.push_back(97);
+	vecCf.push_back(98);
+	vecCf.push_back(99);
+
+	vecCf.push_back(991);
+	vecCf.push_back(992);
+	vecCf.push_back(993);
+	vecCf.push_back(994);
+	vecCf.push_back(995);
+	vecCf.push_back(996);
+	vecCf.push_back(997);
+	vecCf.push_back(998);
+	vecCf.push_back(999);
+
+	// optional: flip vecCf so largest values appear first
+	if (flip){
+		int nCf = vecCf.size();
+		int conf, i;
+		vector<int> vecCfTmp;
+		for (i = 0; i < vecCf.size(); i++){
+			conf = vecCf[nCf-i-1];
+			vecCfTmp.push_back(conf);
+		}
+		for (i = 0; i < vecCf.size(); i++){
+			conf = vecCfTmp[i];
+			vecCf[i] = conf;
+		}
+	}
+}
+
+void getCritCf(int v, double &crit){
 	// set critical confinement parameter
 	if (v == 100)
 		crit = 1.000000000000000000000000;
@@ -366,55 +489,4 @@ void init(int n, int m, int v, int conf, double Ca,
 		crit = 2.304700286813593219417380;
 	if (v == 60)
 		crit = 2.348969764079628399293969;
-
-	// set nominal radius
-	double a, a2, a3;
-	if (conf < 100)
-		a = 0.01*double(conf)*crit;
-	else 
-		a = 0.001*double(conf)*crit;
-	
-	// set area and volume
-	area = 4.0*M_PI*a*a;
-	vlme = (4.0/3.0)*M_PI*a*a*a*(0.01*double(v));
-
-	// read file
-	if (conf < 100)
-		readInput(n, m, v, conf, Ca, T.data(), S.data());
-	else
-		readInput(n, m, v, 99, Ca, T.data(), S.data());
-
-	// copy abscissa and solution vectors
-	for (i = 0; i < m; i++){
-		t[i] = T[i];
-		for (j = 0; j < n; j++){
-			s[i*n + j] = S[i*n + j];
-		}
-	}
-
-	// scale pressure and surface tension by Ca
-	for (i = 0; i < m; i++){
-		double p   = s[i*n + 2]/Ca;
-		double sig = s[i*n + 3]/Ca;
-
-		s[i*n + 2] = p  ;
-		s[i*n + 3] = sig;
-	}
-	
-	// rescale all variables by pressure drop
-	double dp = s[0 + 2] - s[(m-1)*n + 2];
-	for (i = 0; i < m; i++){
-		s[i*n + 2 ] /= dp; // p
-		s[i*n + 3 ] /= dp; // sig
-		s[i*n + 6 ] /= dp; // Q2
-		s[i*n + 8 ] /= dp; // U
-	}
-
-	// rescale all variables by the nominal radius of the vesicle
-	a  = sqrt(area/(4.0*M_PI));
-	a2 = a*a;
-	a3 = a*a*a;
-	for (i = 0; i < m; i++){
-	}
 }
-

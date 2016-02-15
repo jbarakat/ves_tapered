@@ -125,22 +125,6 @@ void readInput(int n, int m, int v, int conf, double Ca, double *t, double *s){
 		return;
   }
 
-//  // error flags
-//  if (n != 11){
-//    cout << "Error: support only for n = 11." << endl;
-//		return;
-//  }
-
- // if (v != 65 && v != 70 && v != 75 && v!=80 && v != 85 && v != 90 && v != 95){
- //   cout << "Error: support only for v = 85, 90, 95." << endl;
- // 	return;
- // }
-
- // if (conf < 90 || conf > 99){
- //   cout << "Error: support only for 90 <= conf <= 99." << endl;
- // 	return;
- // }
-
   typedef vector<double> vdouble;
 
   // declare variables
@@ -299,7 +283,6 @@ void readInput(int n, int m, int v, int conf, double Ca, double *t, double *s){
 	// assemble the solution vector
   for (i = 0; i < m; i++){
     s[i*n + 0 ] = r  [i];
-//    s[i*n + 1 ] = x  [i];
     s[i*n + 1 ] = psi[i];
     s[i*n + 2 ] = p  [i];
     s[i*n + 3 ] = sig[i];
@@ -307,28 +290,11 @@ void readInput(int n, int m, int v, int conf, double Ca, double *t, double *s){
     s[i*n + 5 ] = V  [i];
     s[i*n + 6 ] = Q  [i];
     s[i*n + 7 ] = Rt [i];
-//    s[i*n + 9 ] = xcm[i];
     s[i*n + 8 ] = U  [i];
     s[i*n + 9 ] = S  [i];
     s[i*n + 10] = x  [i];
     s[i*n + 11] = xcm[i];
   }
-
-//  // assemble the solution vector
-//  for (i = 0; i < m; i++){
-//    s[i*n + 0 ] = r  [i];
-////    s[i*n + 1 ] = x  [i];
-//    s[i*n + 2 ] = psi[i];
-//    s[i*n + 3 ] = p  [i];
-//    s[i*n + 4 ] = sig[i];
-//    s[i*n + 5 ] = A  [i];
-//    s[i*n + 6 ] = V  [i];
-//    s[i*n + 7 ] = Q  [i];
-//    s[i*n + 8 ] = Rt [i];
-////    s[i*n + 9 ] = xcm[i];
-//    s[i*n + 9] = U  [i];
-//    s[i*n + 10] = S  [i];
-//  }
 }
 
 
