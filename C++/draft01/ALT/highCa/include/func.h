@@ -38,11 +38,16 @@ using namespace std;
 /* PROTOTYPES */
 
 /* IMPLEMENTATIONS */
-void func(int ny, double Ca, double area, double vlme,
+void func(int ny, double *par,
           double t, double *y, double *f){
   int i;
   if (ny != 12)
     cout << "Error: ny should equal 12." << endl;
+
+	// define parameters
+	double Ca   = par[0];
+	double area = par[1];
+	double vlme = par[2];
   
 	// define variables
   double r   = y[0 ];

@@ -28,18 +28,17 @@
 #include "bcond.h"
 
 /* PROTOTYPES */
-void newton(int, int, int, double, double, double,
+void newton(int, int, int, double*, 
 						double *, double *, double *, double *);
-void fzero(int, int, int, double, double, double,
+void fzero(int, int, int, double*, 
            double*, double*, double*, double*);
-void jacob(int, int, int, double, double, double,
+void jacob(int, int, int, double*,
            double*, double*, double*, double*, double*);
 
 /* IMPLEMENTATIONS */
 
 /* Given last guess s and solution y, calculate the Newton step d. */
-void newton(int n, int m, int nrk,
-            double Ca, double  area, double vlme,
+void newton(int n, int m, int nrk, double *par,
 						double *t, double *s, double *y, double *d){
 	int i, j, k, l;
 	int i1, jj, kk;
@@ -54,7 +53,7 @@ void newton(int n, int m, int nrk,
 	double p = 1;
 	
 	// generate F (function vector) and DF (Jacobian matrix)
-	jacob(n, m, nrk, Ca, area, vlme, t, s, y, F, DF);
+	jacob(n, m, nrk, par, t, s, y, F, DF);
 	
 	/* solve the linear system using Gaussian elimination 
 	 * (LAPACK's DGETRF, (DGEEQU,) and  DGETRS subroutines) */
@@ -150,8 +149,7 @@ void newton(int n, int m, int nrk,
 
 
 /* Generate mn-vector F (function). */
-void fzero(int n, int m, int nrk,
-           double Ca, double area, double vlme,
+void fzero(int n, int m, int nrk, double *par,
            double *t, double *s, double *y, // takes t, s, and y as input
            double *F){
   if (m % 2 == 0){
@@ -170,7 +168,7 @@ void fzero(int n, int m, int nrk,
   double t0,  t1;
 
   // calculate linear BCs
-  bcond(n, area, vlme, A, B, c);
+  bcond(n, par, A, B, c);
   for (i = 0; i < n; i++){
     r[i] = -c[i];
     for (j = 0; j < n; j++){
@@ -210,8 +208,7 @@ void fzero(int n, int m, int nrk,
   }
 }
 
-void jacob(int n, int m, int nrk,
-           double Ca, double area, double vlme,
+void jacob(int n, int m, int nrk, double *par,
            double *t, double *s, double *y,
            double *F, double *DF){
   if (m % 2 == 0){
@@ -233,7 +230,7 @@ void jacob(int n, int m, int nrk,
   double Dy;
 
   // calculate linear BCs
-  bcond(n, area, vlme, A, B, c);
+  bcond(n, par, A, B, c);
   for (i = 0; i < n; i++){
     r[i] = -c[i];
     for (j = 0; j < n; j++){
@@ -310,7 +307,7 @@ void jacob(int n, int m, int nrk,
         sp[k] -= 2.0*Ds;
 
       // integrate to get yp
-      rk4(n, nrk, Ca, area, vlme, t0, t1, sp, yp);
+      rk4(n, nrk, par, t0, t1, sp, yp);
 
       /* calculate forward difference part
        * and update G */
@@ -334,7 +331,7 @@ void jacob(int n, int m, int nrk,
     //    sp[k] += 2.0*Ds;
 
     //  // integrate to get yp
-    //  rk4(n, nrk, Ca, area, vlme, t0, t1, sp, yp);
+    //  rk4(n, nrk, par, t0, t1, sp, yp);
 
     //  /* calculate backward difference part
     //   * and update G and DF */
@@ -394,7 +391,7 @@ void jacob(int n, int m, int nrk,
         sp[k] -= 2.0*Ds;
 
       // integrate to get yp
-      rk4(n, nrk, Ca, area, vlme, t0, t1, sp, yp);
+      rk4(n, nrk, par, t0, t1, sp, yp);
 
       /* calculate forward difference part
        * and update G */
@@ -419,7 +416,7 @@ void jacob(int n, int m, int nrk,
     //    sp[k] += 2.0*Ds;
 
     //  // integrate to get yp
-    //  rk4(n, nrk, Ca, area, vlme, t0, t1, sp, yp);
+    //  rk4(n, nrk, par, t0, t1, sp, yp);
 
     //  /* calculate backward difference part
     //   * and update G and DF*/

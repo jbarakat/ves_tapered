@@ -22,12 +22,12 @@
 #include <math.h>
 
 /* PROTOTYPES */
-void bcond(int, double, double, double*, double*, double*);
+void bcond(int, double*, double*, double*, double*);
 
 /* IMPLEMENTATIONS */
 /* Calculate coefficients for linear BC
  *   r = A*y(0) + B*y(1) - c = 0 */
-void bcond(int n, double area, double vlme,
+void bcond(int n, double *par,
            double *A, double *B, double *c){
   int i; // for (i+1)st BC
   int j; // for jth element of y
@@ -41,6 +41,9 @@ void bcond(int n, double area, double vlme,
     }
     c[i] = 0;
   }
+
+	double area = par[1];
+	double vlme = par[2];
   
 	// matrix of coefficients for BC at t = 0
   A[0 *n + 0 ] =  1; // r  (0) = 0

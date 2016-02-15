@@ -33,16 +33,15 @@
 #include "newton.h"
 
 /* PROTOTYPES */
-void mshoot(int, int, int, double, double, double, double*, double*, double*, int&);
-void shoot (int, int, int, double, double, double, double*, double*, double*);
+void mshoot(int, int, int, double*, double*, double*, double*, int&);
+void shoot (int, int, int, double*, double*, double*, double*);
 
 /* IMPLEMENTATIONS */
 
 /* Multiple shooting routine. Start with an initial guess si and
  * update guess using the Newton-Raphson method.
  */
-void mshoot(int n, int m, int nrk,
-            double Ca, double area, double vlme,
+void mshoot(int n, int m, int nrk, double *par,
 						double *t, double *si, double *sf, int &flag){
 	int    i, j, iter;
 	int    k;
@@ -71,9 +70,9 @@ void mshoot(int n, int m, int nrk,
 	fnorm0 = 0;
 	dfnorm = 1;
 	while (iter < MAXITER && fnorm > TOL && dfnorm > TOL){
-		shoot (n, m, nrk, Ca, area, vlme, t, s, y   );
-		newton(n, m, nrk, Ca, area, vlme, t, s, y, d);
-		fzero (n, m, nrk, Ca, area, vlme, t, s, y, f);
+		shoot (n, m, nrk, par, t, s, y   );
+		newton(n, m, nrk, par, t, s, y, d);
+		fzero (n, m, nrk, par, t, s, y, f);
 		
 		// calculate squared norm of f
 		fnorm = 0;
@@ -92,8 +91,8 @@ void mshoot(int n, int m, int nrk,
 				sp[j] = s[j] - p*d[j];
 			}
 
-			shoot(n, m, nrk, Ca, area, vlme, t, sp, yp    );
-			fzero(n, m, nrk, Ca, area, vlme, t, sp, yp, fp);
+			shoot(n, m, nrk, par, t, sp, yp    );
+			fzero(n, m, nrk, par, t, sp, yp, fp);
 
 			fpnorm = 0;
 			for (j = 0; j < mn; j++){
@@ -138,8 +137,7 @@ void mshoot(int n, int m, int nrk,
  *    = [y(t1; t0, s0), y(t2; t1, s1), ..., y(tmh; tmh-1, smh-1), 
  *       y(tmh; tmh+1, smh+1), ..., y(tm-2; tm-1, sm-1)]
  */
-void shoot(int n, int m, int nrk,
-           double Ca, double area, double vlme, 
+void shoot(int n, int m, int nrk, double *par,
 					 double *t, double *s, double *y){
 	if (m % 2 == 0){
 		cout << "Error: choose m to be odd." << endl;
@@ -164,7 +162,7 @@ void shoot(int n, int m, int nrk,
 		}
 
 		// shoot from t0 to t1
-		rk4(n, nrk, Ca, area, vlme, t0, t1, s0, y1);
+		rk4(n, nrk, par, t0, t1, s0, y1);
 		
 		// store results
 		for (j = 0; j < n; j++)
@@ -184,7 +182,7 @@ void shoot(int n, int m, int nrk,
 		}
 
 		// shoot from t0 to t1
-		rk4(n, nrk, Ca, area, vlme, t0, t1, s0, y1);
+		rk4(n, nrk, par, t0, t1, s0, y1);
 		
 		// store results
 		for (j = 0; j < n; j++)

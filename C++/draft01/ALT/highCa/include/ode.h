@@ -25,14 +25,13 @@
 #include "func.h"
 
 /* PROTOTYPES */
-void rk4(int, int, double, double, double, double, double, double *, double *);
-void eulF(int, int, double, double, double, double *, double *);
+void rk4 (int, int, double*, double, double, double *, double *);
 
 /* IMPLEMENTATIONS */
 
 /* Given t0 and y0 (with parameters p), integrate to y1 at t1
  * using a fourth-order Runge-Kutta scheme. */
-void rk4(int ny, int nstep, double p1, double p2, double p3,
+void rk4(int ny, int nstep, double *par,
          double t0, double t1, double *y0, double *y1){
   int istep, iy, j;
   double t;
@@ -61,7 +60,7 @@ void rk4(int ny, int nstep, double p1, double p2, double p3,
     // first step
     for (iy = 0; iy < ny; iy++)
       y01[iy] = y00[iy];
-    func(ny, p1, p2, p3, t, y01, f);
+    func(ny, par, t, y01, f);
     for (iy = 0; iy < ny; iy++)
       y02[iy] += dt*(1.0/6.0)*f[iy];
 
@@ -69,7 +68,7 @@ void rk4(int ny, int nstep, double p1, double p2, double p3,
     for (j = 0; j < 2; j++){
       for (iy = 0; iy < ny; iy++)
         y01[iy] = y00[iy] + dt*0.5*f[iy];
-      func(ny, p1, p2, p3, t, y01, f);
+      func(ny, par, t, y01, f);
       for (iy = 0; iy < ny; iy++)
         y02[iy] += dt*(1.0/3.0)*f[iy];
     }
@@ -77,7 +76,7 @@ void rk4(int ny, int nstep, double p1, double p2, double p3,
     // fourth step
     for (iy = 0; iy < ny; iy++)
       y01[iy] = y00[iy] + dt*f[iy];
-    func(ny, p1, p2, p3, t, y01, f);
+    func(ny, par, t, y01, f);
     for (iy = 0; iy < ny; iy++)
       y02[iy] += dt*(1.0/6.0)*f[iy];
   }
@@ -89,7 +88,7 @@ void rk4(int ny, int nstep, double p1, double p2, double p3,
   free(y00);
   free(y01);
   free(y02);
-  free(f );
+  free(f  );
 }
 
 #endif

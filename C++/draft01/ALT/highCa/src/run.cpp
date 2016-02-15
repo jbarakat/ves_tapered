@@ -253,11 +253,16 @@ int main(){
 		//			sm[j] = si[j];
 		//		}
 		//	}
+			
+			double par[3];
+			par[0] = Ca;
+			par[1] = area;
+			par[2] = vlme;
 
 			// multiple shooting method
 			cout << "Shooting for v = " << 0.01*v << ", conf = 0." 
 			     << conf << ", Ca = " << Ca << "." << endl;
-			mshoot(n, m, nrk, Ca, area, vlme, t.data(), si.data(), sf.data(), flag);
+			mshoot(n, m, nrk, par, t.data(), si.data(), sf.data(), flag);
 			
 //			// write to file
 //			if (flag == 0)
@@ -363,7 +368,7 @@ void init(int n, int m, int v, int conf, double Ca,
 		crit = 2.348969764079628399293969;
 
 	// set nominal radius
-	double a;
+	double a, a2, a3;
 	if (conf < 100)
 		a = 0.01*double(conf)*crit;
 	else 
@@ -405,9 +410,11 @@ void init(int n, int m, int v, int conf, double Ca,
 		s[i*n + 8 ] /= dp; // U
 	}
 
-//	for (i = 0; i < m; i++){
-//		for (j = 0; j < n; j++){
-//		}
-//	}
+	// rescale all variables by the nominal radius of the vesicle
+	a  = sqrt(area/(4.0*M_PI));
+	a2 = a*a;
+	a3 = a*a*a;
+	for (i = 0; i < m; i++){
+	}
 }
 
