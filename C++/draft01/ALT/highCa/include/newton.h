@@ -7,6 +7,8 @@
  * PARAMETERS
  *  n		[input]			number of ODEs
  *  m		[input]			number of shooting points
+ *  par	[input]			parameters
+ *  u   [input]			source field
  *  t		[input]			independent coordinate (ranges from 0 to 1)
  *  s		[input]			guess (an mn-vector)
  *  y		[input]			solution [an (m-1)n-vector]
@@ -28,17 +30,14 @@
 #include "bcond.h"
 
 /* PROTOTYPES */
-void newton(int, int, int, double*, 
-						double *, double *, double *, double *);
-void fzero(int, int, int, double*, 
-           double*, double*, double*, double*);
-void jacob(int, int, int, double*,
-           double*, double*, double*, double*, double*);
+void newton(int, int, int, double*, double*, double*, double*, double*, double*         );
+void fzero (int, int, int, double*, double*, double*, double*, double*, double*         );
+void jacob (int, int, int, double*, double*, double*, double*, double*, double*, double*);
 
 /* IMPLEMENTATIONS */
 
 /* Given last guess s and solution y, calculate the Newton step d. */
-void newton(int n, int m, int nrk, double *par,
+void newton(int n, int m, int nrk, double *par, double *u,
 						double *t, double *s, double *y, double *d){
 	int i, j, k, l;
 	int i1, jj, kk;
@@ -53,7 +52,7 @@ void newton(int n, int m, int nrk, double *par,
 	double p = 1;
 	
 	// generate F (function vector) and DF (Jacobian matrix)
-	jacob(n, m, nrk, par, t, s, y, F, DF);
+	jacob(n, m, nrk, par, u, t, s, y, F, DF);
 	
 	/* solve the linear system using Gaussian elimination 
 	 * (LAPACK's DGETRF, (DGEEQU,) and  DGETRS subroutines) */
@@ -62,11 +61,6 @@ void newton(int n, int m, int nrk, double *par,
 	int    ldF   =  1;				// leading dimension of F
 	int    nrhs  =  1;				// number of right-hand sides
 	int    ipiv[mn];	 				// array of pivot indices
-//	double RDF[mn], CDF[mn];	// row and column scalings
-//	double rowcond, colcond;	// row and column condition number
-//	double DFmax;							// absolute value of largest matrix element
-//	double overflow	= 1000;		// overflow
-//	double underflow = 0.01;	// underflow
 
 	// factorize
 	info = LAPACKE_dgetrf(LAPACK_ROW_MAJOR, mn, mn, DF, ldDF, ipiv);
@@ -74,59 +68,6 @@ void newton(int n, int m, int nrk, double *par,
 		cout << "Error: dgetrf did not return successfully." << endl;
 		return;
 	}
-
-//	// equilibrate (if necessary)
-//	info = LAPACKE_dgeequ(LAPACK_ROW_MAJOR, mn, mn, DF, ldDF, RDF, CDF, 
-//	                      &rowcond, &colcond, &DFmax);
-//	if (info != 0){
-//		cout << "Error: dgeequ did not return successfully." << endl;
-//		return;
-//	}
-//
-//	if (DFmax > overflow || DFmax < underflow){
-//		if (rowcond < 0.1 && colcond < 0.1){
-//			cout << "Matrix rows and columns were rescaled." << endl;
-//			double DFtmp[mnmn];
-//			for (i = 0; i < mn; i++){
-//				for (j = 0; j < mn; j++){
-//					DFtmp[i*mn + j] = RDF[i]*DF[i*mn + j]*CDF[j];
-//				}
-//			}
-//			for (i = 0; i < mn; i++){
-//				for (j = 0; j < mn; j++){
-//					DF[i*mn + j] = DFtmp[i*mn + j];
-//				}
-//			}
-//		}
-//		else if (rowcond < 0.1){
-//			cout << "Matrix rows were rescaled." << endl;
-//			double DFtmp[mnmn];
-//			for (i = 0; i < mn; i++){
-//				for (j = 0; j < mn; j++){
-//					DFtmp[i*mn + j] = RDF[i]*DF[i*mn + j];
-//				}
-//			}
-//			for (i = 0; i < mn; i++){
-//				for (j = 0; j < mn; j++){
-//					DF[i*mn + j] = DFtmp[i*mn + j];
-//				}
-//			}
-//		}
-//		else if (colcond < 0.1){
-//			cout << "Matrix columns were rescaled." << endl;
-//			double DFtmp[mnmn];
-//			for (i = 0; i < mn; i++){
-//				for (j = 0; j < mn; j++){
-//					DFtmp[i*mn + j] = DF[i*mn + j]*CDF[j];
-//				}
-//			}
-//			for (i = 0; i < mn; i++){
-//				for (j = 0; j < mn; j++){
-//					DF[i*mn + j] = DFtmp[i*mn + j];
-//				}
-//			}
-//		}
-//	}
 
 	// solve
 	info = LAPACKE_dgetrs(LAPACK_ROW_MAJOR, trans, mn, nrhs, DF, ldDF, ipiv, F, ldF);
@@ -149,7 +90,7 @@ void newton(int n, int m, int nrk, double *par,
 
 
 /* Generate mn-vector F (function). */
-void fzero(int n, int m, int nrk, double *par,
+void fzero(int n, int m, int nrk, double *par, double *u,
            double *t, double *s, double *y, // takes t, s, and y as input
            double *F){
   if (m % 2 == 0){
@@ -208,7 +149,7 @@ void fzero(int n, int m, int nrk, double *par,
   }
 }
 
-void jacob(int n, int m, int nrk, double *par,
+void jacob(int n, int m, int nrk, double *par, double *u,
            double *t, double *s, double *y,
            double *F, double *DF){
   if (m % 2 == 0){
@@ -226,6 +167,7 @@ void jacob(int n, int m, int nrk, double *par,
   double sp[n], yp[n];
   double s0, s1;
   double t0, t1;
+  double u0, u1;
   double Ds = 0.00001;
   double Dy;
 
@@ -286,6 +228,8 @@ void jacob(int n, int m, int nrk, double *par,
     ni2 = (i+2)*n;
     t0  = t[i  ];
     t1  = t[i+1];
+    u0  = u[i  ];
+    u1  = u[i+1];
 
     // assign G to main diagonal
     for (k = 0; k < n; k++){    // columns: ds0 to ds(n-1)
@@ -307,41 +251,16 @@ void jacob(int n, int m, int nrk, double *par,
         sp[k] -= 2.0*Ds;
 
       // integrate to get yp
-      rk4(n, nrk, par, t0, t1, sp, yp);
+      rk4(n, nrk, par, u0, u1, t0, t1, sp, yp);
 
       /* calculate forward difference part
        * and update G */
       for (j = 0; j < n; j++){  // rows: dy0 to dy(n-1)
         jj = j + ni;
         Dy = yp[j] - y[jj];
-      //  G[j*n  + k] = 0.5*Dy/Ds;
         G [j *n   + k ] = Dy/Ds;
         DF[jj*mn  + kk] = G[j*n + k];
       }
-
-    //  // perturb sp = s - Ds
-    //  sp[k] -= 2*Ds;
-
-    //  // check radius
-    //  if (k == 0 && sp[k] < 0)
-    //    sp[k] += 2.0*Ds;
-
-    //  // check tilt angle
-    //  if (k == 1 && sp[k] < -M_PI/2)
-    //    sp[k] += 2.0*Ds;
-
-    //  // integrate to get yp
-    //  rk4(n, nrk, par, t0, t1, sp, yp);
-
-    //  /* calculate backward difference part
-    //   * and update G and DF */
-    //  for (j = 0; j < n; j++){  // rows: dy0 to dy(n-1)
-    //    jj = j + ni;
-    //    Dy = y[jj] - yp[j];
-    //  
-    //    G [j *n  + k ] += 0.5*Dy/Ds;
-    //    DF[jj*mn + kk]  = G[j*n + k];
-    //  }
     }
 
     // assign -I to upper diagonal
@@ -361,6 +280,8 @@ void jacob(int n, int m, int nrk, double *par,
     ni2 = (i+2)*n;
     t0  = t[i+1];
     t1  = t[i  ];
+    u0  = u[i+1];
+    u1  = u[i  ];
 
     // assign -I to main diagonal
     for (j = ni; j < ni1; j++){
@@ -391,42 +312,16 @@ void jacob(int n, int m, int nrk, double *par,
         sp[k] -= 2.0*Ds;
 
       // integrate to get yp
-      rk4(n, nrk, par, t0, t1, sp, yp);
+      rk4(n, nrk, par, u0, u1, t0, t1, sp, yp);
 
       /* calculate forward difference part
        * and update G */
       for (j = 0; j < n; j++){  // rows: dy0 to dyn
         jj = j + ni;
         Dy = yp[j] - y[jj];
-
-    //    G[j*n + k] = 0.5*Dy/Ds;
         G [j *n  + k ] = Dy/Ds;
         DF[jj*mn + kk] = G[j*n + k];
       }
-
-    //  // perturb sp = s - Ds
-    //  sp[k] -= 2*Ds;
-
-    //  // check radius
-    //  if (k == 0 && sp[k] < 0)
-    //    sp[k] += 2.0*Ds;
-
-    //  // check tilt angle
-    //  if (k == 1 && sp[k] < -M_PI/2)
-    //    sp[k] += 2.0*Ds;
-
-    //  // integrate to get yp
-    //  rk4(n, nrk, par, t0, t1, sp, yp);
-
-    //  /* calculate backward difference part
-    //   * and update G and DF*/
-    //  for (j = 0; j < n; j++){  // rows: dy0 to dyn
-    //    jj = j + ni;
-    //    Dy = y[jj] - yp[j];
-    //  
-    //    G [j *n  + k ] += 0.5*Dy/Ds;
-    //    DF[jj*mn + kk]  = G[j*n + k];
-    //  }
     }
   }
 

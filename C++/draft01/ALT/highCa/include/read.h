@@ -9,17 +9,8 @@
  *  m			[input]		number of shooting points
  *  v			[input]		reduced volume (x 100)
  *  conf	[input]		confinement parameter scaled by critical value (x 100)
- *  t			[output]	abscissas (meridional arc length scaled to the [0,1] axis)
- *  r			[output]	cylindrical radius
- *  psi		[output]	tilt angle
- *  cs		[output]	meridional curvature (points outward from closed contour)
- *  qs		[output]	meridional component of transverse shear tension
- *  p			[output]	pressure difference between exterior and interior
- *  sig		[output]	mean tension
- *  A			[output]	surface area
- *  V			[output]	volume
- *	Q			[output]	leakback flow rate
- *  S			[output]	total meridional arc length (half-space)
+ *  t			[output]	abscissas
+ *  s			[input]		solution vector
  */
 
 #ifndef READ_H
@@ -43,7 +34,7 @@ using namespace std;
  * - output files all use CaInf.dat suffix */
 void fileCheckInput(int, int, double, bool &); 
 void fileCheckOutput(int, int, bool &); 
-void readInput(int, int, int, int, double, double *, double *); 
+void readInput (int, int, int, int, double, double *, double *); 
 void readOutput(int, int, int, int, double *, double *); 
 
 /* IMPLEMENTATIONS */

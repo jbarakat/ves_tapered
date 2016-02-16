@@ -7,7 +7,9 @@
  * PARAMETERS
  *  ny		[input]		number of elements in y
  *  nstep	[input]		number of integration steps
- *  p			[input]		parameter
+ *  par		[input]		parameters
+ *  u0		[input]		source at lower boundary
+ *  u1		[input]		source at upper boundary
  *  t0		[input]		lower boundary of domain
  *  t1		[input]		upper boundary of domain
  *  y0		[input]		solution vector at t = t0 (initial condition)
@@ -25,17 +27,18 @@
 #include "func.h"
 
 /* PROTOTYPES */
-void rk4 (int, int, double*, double, double, double *, double *);
+void rk4 (int, int, double*, double, double, double, double, double *, double *);
 
 /* IMPLEMENTATIONS */
 
 /* Given t0 and y0 (with parameters p), integrate to y1 at t1
  * using a fourth-order Runge-Kutta scheme. */
-void rk4(int ny, int nstep, double *par,
+void rk4(int ny, int nstep, double *par, double u0, double u1,
          double t0, double t1, double *y0, double *y1){
   int istep, iy, j;
-  double t;
+  double t, u;
   double dt = (t1 - t0)/nstep;
+  double du = (u1 - u0)/nstep;
   double *y00, *y01, *y02;
   double *f;
 
@@ -46,21 +49,21 @@ void rk4(int ny, int nstep, double *par,
   
   // initialize
   t = t0;
+	u = u0;
   for (iy = 0; iy < ny; iy++)
     y02[iy] = y0[iy];
 
   for (istep = 0; istep < nstep; istep++){
-//		cout << istep << endl;
-
     // setup
     t += istep*dt;
+		u += istep*du;
     for (iy = 0; iy < ny; iy++)
       y00[iy] = y02[iy];
 
     // first step
     for (iy = 0; iy < ny; iy++)
       y01[iy] = y00[iy];
-    func(ny, par, t, y01, f);
+    func(ny, par, u, t, y01, f);
     for (iy = 0; iy < ny; iy++)
       y02[iy] += dt*(1.0/6.0)*f[iy];
 
@@ -68,7 +71,7 @@ void rk4(int ny, int nstep, double *par,
     for (j = 0; j < 2; j++){
       for (iy = 0; iy < ny; iy++)
         y01[iy] = y00[iy] + dt*0.5*f[iy];
-      func(ny, par, t, y01, f);
+      func(ny, par, u, t, y01, f);
       for (iy = 0; iy < ny; iy++)
         y02[iy] += dt*(1.0/3.0)*f[iy];
     }
@@ -76,7 +79,7 @@ void rk4(int ny, int nstep, double *par,
     // fourth step
     for (iy = 0; iy < ny; iy++)
       y01[iy] = y00[iy] + dt*f[iy];
-    func(ny, par, t, y01, f);
+    func(ny, par, u, t, y01, f);
     for (iy = 0; iy < ny; iy++)
       y02[iy] += dt*(1.0/6.0)*f[iy];
   }

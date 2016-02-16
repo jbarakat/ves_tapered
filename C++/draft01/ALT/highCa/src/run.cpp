@@ -10,6 +10,7 @@
 //#include <algorithm>
 //#include <iterator>
 #include <string>
+#include <gsl/gsl_sf_trig.h>
 #include "../include/shoot.h"
 #include "../include/read.h"
 #include "../include/write.h"
@@ -37,10 +38,18 @@ int main(){
 
 	// abscissa and solution vectors
 	vector<double> t(m), si(n*m), sm(n*m), sf(n*m);
+
+	// parameters for time integration
+	double ts, dts;
+	double r0, r1, dr;
+	double x0, x1, dx;
+	double cos, sin;
+	double U;
+	vector<double> u(m, 0.0);
 	
 	// parameters
 	double par[10];
-	double Ca, area, vlme, alph;
+	double Ca, area, vlme, R0, alph, tana;
 	double redvol, tubrad, tapang;
 	double dC0, dC1, slope;
 	vector<double> vecCa;
@@ -62,6 +71,7 @@ int main(){
 	// get vector of taper angle
 	bool flipTa = false;
 	getTa(flipTa, vecTa);
+	tapang = 0.01;
 
 	// get vector of confinement
 	bool flipCf = false;
@@ -112,21 +122,69 @@ int main(){
 				}
 			}
 
-			tapang = 0.01;
-			
+			// set parameters
 			par[0] = redvol;
 			par[1] = tubrad;
 			par[2] = tapang;
 
-			// multiple shooting method
-			cout << "Shooting for v = " << 0.01*v << ", conf = 0."  << conf << "." << endl;
-			mshoot(n, m, nrk, par, t.data(), si.data(), sf.data(), flag);
+			/*--------------------- TIME INTEGRATION ----------------------*/
+		
 			
-			// write to file
-			id[0] = v;
-			id[1] = 1;
-			if (flag == 0)
-				writeSoln(n, m, id, t.data(), sf.data(), opath);
+			ts   = 0.0 ;
+			dts  = 10;
+			R0   = tubrad;
+			alph = tapang;
+			tana = gsl_sf_sin(alph)/gsl_sf_cos(alph);
+
+			// solve quasi-steady problem using the multiple shooting method
+			for (i = 0; i < 100; i++){
+				cout << "Shooting for v = " << 0.01*v << ", conf = 0."  << conf << "." << endl;
+				mshoot(n, m, nrk, par, u.data(), t.data(), si.data(), sf.data(), flag);
+				
+				// update R0
+				U      = sf[0*n + 8];
+				R0    += +U*dts*tana;
+				par[1] = R0;
+
+				// START FROM HERE
+
+				// calculate source field for next timestep
+				// (normal velocity of the surface)
+				if (i > 4){
+					double unorm = 0.0;
+					for (j = 0; j < m; j++){
+						cos  = gsl_sf_cos(si[j*n + 1]);
+						sin  = gsl_sf_sin(si[j*n + 1]);
+						r0   = si[j*n + 0 ];
+						r1   = sf[j*n + 0 ];
+						x0   = si[j*n + 10];
+						x1   = sf[j*n + 10];
+						dr   = (r1 - r0)/dts;
+						dx   = (x1 - x0)/dts;
+
+						u[j] = dx*sin + dr*cos;
+						unorm += u[j]*u[j];
+					}
+					cout << unorm << endl;
+				}
+			
+				// write to file
+				id[0] = v;
+				id[1] = 1;
+				if (flag == 0)
+					writeSoln(n, m, id, t.data(), sf.data(), opath);
+
+				if (flag == 0){
+					cout << "Continuing from last solution..." << endl;
+					for (j = 0; j < m*n; j++){
+						si[j] = sf[j];
+					}
+				}
+
+				ts += dts;
+			}
+			
+			/*-------------------------------------------------------------*/
 		}
 	}
 
@@ -258,29 +316,29 @@ void getVr(bool flip, vector<int>& vecVr){
 //	vecVr.push_back(62);
 //	vecVr.push_back(63);
 //	vecVr.push_back(64);
-	vecVr.push_back(65);
+//	vecVr.push_back(65);
 //	vecVr.push_back(66);
 //	vecVr.push_back(67);
 //	vecVr.push_back(68);
 //	vecVr.push_back(69);
 
-	vecVr.push_back(70);
+//	vecVr.push_back(70);
 //	vecVr.push_back(71);
 //	vecVr.push_back(72);
 //	vecVr.push_back(73);
 //	vecVr.push_back(74);
-	vecVr.push_back(75);
+//	vecVr.push_back(75);
 //	vecVr.push_back(76);
 //	vecVr.push_back(77);
 //	vecVr.push_back(78);
 //	vecVr.push_back(79);
 	
-	vecVr.push_back(80);
+//	vecVr.push_back(80);
 //	vecVr.push_back(81);
 //	vecVr.push_back(82);
 //	vecVr.push_back(83);
 //	vecVr.push_back(84);
-	vecVr.push_back(85);
+//	vecVr.push_back(85);
 //	vecVr.push_back(86);
 //	vecVr.push_back(87);
 //	vecVr.push_back(88);
@@ -291,7 +349,7 @@ void getVr(bool flip, vector<int>& vecVr){
 //	vecVr.push_back(92);
 //	vecVr.push_back(93);
 //	vecVr.push_back(94);
-	vecVr.push_back(95);
+//	vecVr.push_back(95);
 //	vecVr.push_back(96);
 //	vecVr.push_back(97);
 //	vecVr.push_back(98);
@@ -328,36 +386,36 @@ void getCf(bool flip, vector<int>& vecCf){
 //	vecCf.push_back(79);
 
 	vecCf.push_back(80);
-	vecCf.push_back(81);
-	vecCf.push_back(82);
-	vecCf.push_back(83);
-	vecCf.push_back(84);
-	vecCf.push_back(85);
-	vecCf.push_back(86);
-	vecCf.push_back(87);
-	vecCf.push_back(88);
-	vecCf.push_back(89);
-
-	vecCf.push_back(90);
-	vecCf.push_back(91);
-	vecCf.push_back(92);
-	vecCf.push_back(93);
-	vecCf.push_back(94);
-	vecCf.push_back(95);
-	vecCf.push_back(96);
-	vecCf.push_back(97);
-	vecCf.push_back(98);
-	vecCf.push_back(99);
-
-	vecCf.push_back(991);
-	vecCf.push_back(992);
-	vecCf.push_back(993);
-	vecCf.push_back(994);
-	vecCf.push_back(995);
-	vecCf.push_back(996);
-	vecCf.push_back(997);
-	vecCf.push_back(998);
-	vecCf.push_back(999);
+//	vecCf.push_back(81);
+//	vecCf.push_back(82);
+//	vecCf.push_back(83);
+//	vecCf.push_back(84);
+//	vecCf.push_back(85);
+//	vecCf.push_back(86);
+//	vecCf.push_back(87);
+//	vecCf.push_back(88);
+//	vecCf.push_back(89);
+//
+//	vecCf.push_back(90);
+//	vecCf.push_back(91);
+//	vecCf.push_back(92);
+//	vecCf.push_back(93);
+//	vecCf.push_back(94);
+//	vecCf.push_back(95);
+//	vecCf.push_back(96);
+//	vecCf.push_back(97);
+//	vecCf.push_back(98);
+//	vecCf.push_back(99);
+//
+//	vecCf.push_back(991);
+//	vecCf.push_back(992);
+//	vecCf.push_back(993);
+//	vecCf.push_back(994);
+//	vecCf.push_back(995);
+//	vecCf.push_back(996);
+//	vecCf.push_back(997);
+//	vecCf.push_back(998);
+//	vecCf.push_back(999);
 
 	// optional: flip vecCf so largest values appear first
 	if (flip){
