@@ -27,11 +27,8 @@ int main(){
 	int    n    = 12;		// size of solution vector
 	int    m    = 105;	// number of shooting points
 	int    nrk  = 50;		// number of Runge-Kutta steps
-	int    v;						// reduced volume
-	int    conf;				// maximum radius
 	int    flag;				// error flag
 	bool   info;				// boolean flag for file check
-	int    id[10];			// identifier for file saving
 
 	// output directory
 	string opath = "../output";
@@ -56,6 +53,11 @@ int main(){
 	vector<int   > vecVr;
 	vector<int   > vecCf;
 	vector<int   > vecTa;
+	
+	int    v;						// reduced volume
+	int    conf;				// initial confinement
+	int    a;						// taper angle
+	int    id[10];			// identifier for file saving
 
 	// initialize Ca
 	Ca = 10000;
@@ -135,6 +137,20 @@ int main(){
 			R0   = tubrad;
 			alph = tapang;
 			tana = gsl_sf_sin(alph)/gsl_sf_cos(alph);
+			
+			// initialize to get the first value of u
+			vector<double> s0;
+			for (i = 0; i < 3; i++){
+				cout << "Shooting for v = " << 0.01*v << ", conf = 0."  << conf << "." << endl;
+				mshoot(n, m, nrk, par, u.data(), t.data(), si.data(), sf.data(), flag);
+
+				if (flag == 0){
+					cout << "Continuing from last solution..." << endl;
+					for (j = 0; j < m*n; j++){
+						si[j] = sf[j];
+					}
+				}
+			}
 
 			// solve quasi-steady problem using the multiple shooting method
 			for (i = 0; i < 100; i++){
@@ -143,7 +159,7 @@ int main(){
 				
 				// update R0
 				U      = sf[0*n + 8];
-				R0    += +U*dts*tana;
+				R0    += -U*dts*tana;
 				par[1] = R0;
 
 				// START FROM HERE
@@ -169,6 +185,7 @@ int main(){
 				}
 			
 				// write to file
+				int a = 1;
 				id[0] = v;
 				id[1] = 1;
 				if (flag == 0)
